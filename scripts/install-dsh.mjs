@@ -454,8 +454,16 @@ export function runInstaller(options) {
   };
 }
 
-const isMain = process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
-if (isMain) {
+export function isExecutedAsCliEntry(metaUrl = import.meta.url, argv1 = process.argv[1]) {
+  if (!argv1) return false;
+  try {
+    return fs.realpathSync(path.resolve(argv1)) === fs.realpathSync(fileURLToPath(metaUrl));
+  } catch {
+    return pathToFileURL(path.resolve(argv1)).href === metaUrl;
+  }
+}
+
+if (isExecutedAsCliEntry()) {
   const parsed = parseCliArgs(process.argv.slice(2));
   if (parsed.mode === 'help') {
     console.log(formatHelpText());
