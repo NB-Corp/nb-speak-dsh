@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "nb-speak · 真人感气泡与语音条",
+    "description": "为 DeepSeek Harness 注册原生 send_bubble 与 send_artifact 工具，并在 WebUI 对话流中直接渲染呼吸感 IM 短句气泡、可播放语音条与可复制代码产物卡片。"
+  }
+}

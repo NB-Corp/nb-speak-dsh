@@ -1,0 +1,27 @@
+# nb-speak-dsh (`@nb-corp/nb-speak-dsh`)
+
+> `NB-Corp/nb-speak-dsh` (`@nb-corp/nb-speak-dsh`, MIT License) is the standalone, zero-dependency DeepSeek Harness (`DSH`) Cordis plugin and WebUI client extension (`exports["./client"]`) that replaces single-blob Markdown essays in DSH with native IM squircle bubbles, playable 22-bar ElevenLabs `eleven_v4` / Web Speech voice-note pills, and collapsible one-click copyable code/SQL/diff/table cards. It registers `send_bubble` (`exec.concludeTurn()`) and `send_artifact` natively—eliminating both subagent `send_message` collisions and `EMPTY_RESPONSE` 5x retry loops—and installs in 15 seconds with zero repository clone via `npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web`.
+
+## Zero-Clone Install & Reversible Uninstall
+
+- `npx --yes github:NB-Corp/nb-speak-dsh --dry-run --profile web` — Preview planned DSH profile mutations with zero filesystem writes.
+- `npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web` — Persist a self-contained runtime bundle to `<DSH_HOME>/plugins/nb-speak-dsh` (immune to `npx` cache eviction), mount `@nb-corp/nb-speak-dsh` into `<DSH_HOME>/profiles/web`, and snapshot original files to `<DSH_HOME>/.nb-speak-backup/web.json` without reading or touching `.credentials.yaml`.
+- `ELEVENLABS_API_KEY="xi-..." dsh web` — Launch DSH WebUI with optional live ElevenLabs `eleven_v4` voice synthesis (unconfigured setups fall back seamlessly to browser Web Speech with zero errors).
+- `npx --yes github:NB-Corp/nb-speak-dsh --uninstall --profile web` — Restore the DSH profile byte-for-byte from backup and remove `<DSH_HOME>/plugins/nb-speak-dsh`.
+
+## Canonical Documentation & Live Surfaces
+
+- [Repository & Quickstart (English)](https://github.com/NB-Corp/nb-speak-dsh/blob/main/README.md): Architecture, 15s zero-clone installer, 4 live `:19081` vs `:19082` DSH duels, and 5-axis style budget.
+- [中文旗舰指南 (README.zh-CN.md)](https://github.com/NB-Corp/nb-speak-dsh/blob/main/README.zh-CN.md): 15 秒零克隆安装、`exec.concludeTurn()` 底层机制、ElevenLabs `eleven_v4` 真声与四大实机对比。
+- [Interactive DSH `turnTail` Showcase (EN)](https://nb-corp.github.io/nb-speak-dsh/): Live `conversation.chat.turnTail` bubble simulator, playable ElevenLabs `eleven_v4` voice notes, CLI configurator, and full-res DSH screenshot lightbox.
+- [DSH 原生真气泡在线展台 (ZH)](https://nb-corp.github.io/nb-speak-dsh/zh/): 中文交互式 `turnTail` 气泡与 22 柱波形语音点播、安装命令生成器与实机大图检视。
+- [Full Technical Specification for LLMs (`llms-full.txt`)](https://nb-corp.github.io/nb-speak-dsh/llms-full.txt): Complete DSH Cordis/Schemastery contracts, `send_bubble` + `send_artifact` strict DSH JSON Schemas, `exec.concludeTurn()` lifecycle, `presentationMeta` zero-token audio split, quantitative benchmarks, and FAQ.
+
+## The `NB-Corp` Speaking Trio & Sibling Stack
+
+- [NB-Corp/nb-speak-dsh](https://github.com/NB-Corp/nb-speak-dsh): Standalone native DeepSeek Harness (`DSH`) Cordis plugin & WebUI `turnTail` bubble extension.
+- [NB-Corp/nb-speak](https://github.com/NB-Corp/nb-speak): Universal cross-framework `send_message` + `send_artifact` protocol SDK, zero-dep OpenAI/SSE HTTP bridge, and `bubble_lint` engine (`https://nb-corp.github.io/nb-speak/`).
+- [NB-Corp/chat-human](https://github.com/NB-Corp/chat-human): Standalone 2-layer IM delivery & pluggable persona Agent Skill (`npx skills add NB-Corp/chat-human`) with Python stdlib `bubble_lint.py` and `proactive_gate.py`.
+- [NB-Corp/nb-search-dsh](https://github.com/NB-Corp/nb-search-dsh) & [NB-Corp/nb-search](https://github.com/NB-Corp/nb-search): Native DSH search/fetch plugin and unified multi-lane web search SDK.
+- [NB-Corp/nb-im](https://github.com/NB-Corp/nb-im): Bidirectional messaging sessions (Telegram, Feishu, Slack, Discord, Matrix, WeChat) and notification outbox.
+- [NB-Corp/nb-extract](https://github.com/NB-Corp/nb-extract) & [NB-Corp/nb-hub](https://github.com/NB-Corp/nb-hub): Document-to-Markdown extraction Skill and deterministic zero-LLM signal switchboard.

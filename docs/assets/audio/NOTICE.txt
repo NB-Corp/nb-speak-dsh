@@ -1,0 +1,24 @@
+AI-Synthesized Demo Audio Notice
+================================
+
+All static `.mp3` voice-note demonstration clips in this directory (`casual-en.mp3`,
+`casual-zh.mp3`, `sql-en.mp3`, `sql-zh.mp3`, `kanban-en.mp3`, `kanban-zh.mp3`,
+`persona-en.mp3`, `persona-zh.mp3`) are AI-generated synthetic speech created solely
+to demonstrate `@nb-corp/nb-speak-dsh` complementary voice-note playback inside
+DeepSeek Harness (`DSH`) WebUI:
+
+- Engine: ElevenLabs (`eleven_v4`) across both English and Mandarin Chinese clips,
+  loudness-normalized to `-16 LUFS`.
+- Voices: Official ElevenLabs premade platform voices (`Jessica`, `Sarah`, `Julia`,
+  `ZiYue`, and `ShanShan`) under a paid Creator subscription.
+
+Zero real-person voice cloning or impersonation was used.
+
+Scope relative to the repository MIT License:
+While all source code, Cordis plugin schemas, WebUI extensions, CLI installers, and
+documentation in this repository are licensed under the MIT License (`LICENSE`),
+these bundled demo audio files remain subject to upstream provider terms
+(ElevenLabs Prohibited Use Policy): they may be played, cached, and redistributed
+as part of project forks/previews with AI disclosure, but may not be extracted or
+used to train, fine-tune, or develop competing AI or speech synthesis models, or
+misrepresented as real human recordings.

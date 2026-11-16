@@ -1,0 +1,142 @@
+{
+  "name": "@nb-corp/nb-speak-dsh",
+  "version": "0.3.1",
+  "description": "Zero-dependency DeepSeek Harness (DSH) native IM bubble plugin & WebUI extension: send_bubble (exec.concludeTurn()) + send_artifact tools, tactile squircle bubbles, 22-bar ElevenLabs v4 / Web Speech voice-note pills, and one-click copyable artifact cards.",
+  "icon": "./icon.svg",
+  "license": "MIT",
+  "author": "Nai Long 7th <nailong@xter.org>",
+  "homepage": "https://nb-corp.github.io/nb-speak-dsh/",
+  "bugs": {
+    "url": "https://github.com/NB-Corp/nb-speak-dsh/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NB-Corp/nb-speak-dsh.git"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "cordis",
+    "nb-speak",
+    "chat-human",
+    "ai-agents",
+    "chat-ui",
+    "instant-messaging",
+    "voice-notes",
+    "elevenlabs",
+    "tts",
+    "tool-calling",
+    "typescript",
+    "nb-corp"
+  ],
+  "type": "module",
+  "main": "./dist/plugin.js",
+  "types": "./src/plugin.ts",
+  "bin": {
+    "nb-speak-dsh": "./scripts/install-dsh.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/plugin.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./agent": {
+      "types": "./src/agent.ts",
+      "default": "./dist/agent.js"
+    },
+    "./dsh-tools": {
+      "types": "./src/dsh-tools.ts",
+      "default": "./dist/dsh-tools.js"
+    },
+    "./tts": {
+      "types": "./src/tts.ts",
+      "default": "./dist/tts.js"
+    },
+    "./client": "./dist/client.js",
+    "./client-model": {
+      "types": "./src/client-model.ts",
+      "default": "./dist/client-model.js"
+    },
+    "./weights": {
+      "types": "./src/weights.ts",
+      "default": "./dist/weights.js"
+    },
+    "./tool-remap": {
+      "types": "./src/tool-remap.ts",
+      "default": "./dist/tool-remap.js"
+    },
+    "./upstream": {
+      "types": "./src/upstream.ts",
+      "default": "./dist/upstream.js"
+    },
+    "./http-bridge": {
+      "types": "./src/http-bridge.ts",
+      "default": "./dist/http-bridge.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./presets/*.patch.yml": "./presets/*.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": [
+        "./cordis.patch.yml",
+        "./presets/nb-speak.patch.yml"
+      ]
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-ui-tool"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "scripts",
+    "presets",
+    "locale",
+    "icon.svg",
+    "cordis.patch.yml",
+    "LICENSE",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test:unit": "node --test tests/*.test.ts",
+    "test": "npm run build && npm run test:unit",
+    "install:dry-run": "node scripts/install-dsh.mjs --dry-run"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.0",
+    "@deepseek-ai/dsh-credentials": ">=0.2.1-rc.0",
+    "@deepseek-ai/dsh-llm": ">=0.2.1-rc.0",
+    "@deepseek-ai/schemastery": ">=3.18.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-credentials": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-movement="M12">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nb-speak-dsh — DeepSeek Harness 原生真气泡与贴麦语音插件</title>
+  <meta name="description" content="独立零依赖的 DeepSeek Harness (DSH) 原生真气泡插件：一等公民 send_bubble + exec.concludeTurn()、22 柱 ElevenLabs v4 / Web Speech 波形语音胶囊与可复制代码卡片，一行 npx 零克隆挂载。">
+  <link rel="canonical" href="https://nb-corp.github.io/nb-speak-dsh/zh/">
+  <link rel="alternate" hreflang="en" href="https://nb-corp.github.io/nb-speak-dsh/">
+  <link rel="alternate" hreflang="zh-CN" href="https://nb-corp.github.io/nb-speak-dsh/zh/">
+  <link rel="alternate" hreflang="x-default" href="https://nb-corp.github.io/nb-speak-dsh/">
+  <link rel="icon" href="https://raw.githubusercontent.com/NB-Corp/nb-speak-dsh/main/icon.svg" type="image/svg+xml">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NB-Corp / nb-speak-dsh">
+  <meta property="og:title" content="nb-speak-dsh — 为 DeepSeek Harness 注入真气泡与贴麦语音">
+  <meta property="og:description" content="告别单块 Markdown 论文墙：原生 turnTail 短气泡、22 柱 ElevenLabs v4 贴麦语音胶囊与一键复制 SQL/代码卡，零依赖一行命令安装。">
+  <meta property="og:url" content="https://nb-corp.github.io/nb-speak-dsh/zh/">
+  <meta property="og:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="nb-speak-dsh — DeepSeek Harness 原生真气泡插件">
+  <meta name="twitter:description" content="一行 npx 零克隆挂载：send_bubble + exec.concludeTurn() 零重试收束、22 柱 ElevenLabs v4 波形语音与独立代码卡。">
+  <meta name="twitter:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
+
+  <link rel="stylesheet" href="../assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "@nb-corp/nb-speak-dsh",
+        "inLanguage": "zh-CN",
+        "description": "独立零依赖的 DeepSeek Harness (DSH) Cordis 插件与 WebUI 扩展：原生注册 send_bubble (exec.concludeTurn()) 与 send_artifact，在 conversation.chat.turnTail 渲染短气泡、22 柱 ElevenLabs v4 语音胶囊与可复制代码卡片。",
+        "codeRepository": "https://github.com/NB-Corp/nb-speak-dsh",
+        "url": "https://nb-corp.github.io/nb-speak-dsh/zh/",
+        "programmingLanguage": ["TypeScript", "JavaScript"],
+        "license": "https://opensource.org/licenses/MIT",
+        "version": "0.3.1",
+        "author": {
+          "@type": "Organization",
+          "name": "NB-Corp",
+          "url": "https://github.com/NB-Corp"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "nb-speak-dsh (DeepSeek Harness 原生气泡插件)",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux, Web",
+        "softwareVersion": "0.3.1",
+        "url": "https://nb-corp.github.io/nb-speak-dsh/zh/",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "如何在不克隆仓库的情况下为 DeepSeek Harness 安装 nb-speak-dsh？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "直接执行 npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web。安装器会先备份原配置，将零依赖插件持久化同步到 ~/.dsh/plugins/nb-speak-dsh 以防 npx 缓存清理失效，且全程绝不触碰 .credentials.yaml。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "为什么 nb-speak-dsh 采用 send_bubble 配合 exec.concludeTurn()？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "DSH 官方子代理模块已占用 send_message({ agent_id, message })，且普通工具执行后若返回空文本会被判定为 EMPTY_RESPONSE 重试 5 次。注册 send_bubble 并在内部调用 exec.concludeTurn() 可在单步内干净终结回合，实现零冲突与零重试。"
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="page-wrap">
+    <header class="masthead">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span>nb-speak-dsh</span>
+      </a>
+      <nav class="nav-links" aria-label="主导航">
+        <a class="nav-pill" href="#live-stage" aria-current="page">实机对比台</a>
+        <a class="nav-pill" href="#install">15秒安装</a>
+        <a class="nav-pill" href="#architecture">核心机制</a>
+        <a class="nav-pill" href="../llms.txt">llms.txt</a>
+        <a class="nav-pill" href="../" lang="en">English</a>
+      </nav>
+      <a class="pill-cta" href="https://github.com/NB-Corp/nb-speak-dsh" target="_blank" rel="noopener">
+        <span>GitHub</span>
+        <span class="pill-cta__orb" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </span>
+      </a>
+    </header>
+
+    <main>
+      <section id="live-stage">
+        <div class="hero-top">
+          <div class="hero-copy">
+            <span class="eyebrow-tag">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>@nb-corp/nb-speak-dsh · 零外部运行时依赖</span>
+            </span>
+            <h1 class="hero-title">给 DSH 换上真人短气泡</h1>
+            <p class="hero-sub">原生注册 <code class="mono">send_bubble</code> + <code class="mono">send_artifact</code> 并挂载至 <code class="mono">turnTail</code>：短句圆角气泡、22 柱 ElevenLabs <code class="mono">eleven_v4</code> 语音胶囊与可复制代码卡。</p>
+          </div>
+
+          <div class="scenario-bar" id="scenario-tabs" role="tablist" aria-label="DSH 实机对比场景"></div>
+        </div>
+
+        <div class="hero-cmd-shell">
+          <code class="hero-cmd-code" id="hero-cmd-text">npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web</code>
+          <button type="button" class="copy-pill-btn" id="hero-copy-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-copy-label>复制</span>
+          </button>
+        </div>
+
+        <div class="m12-bezel-shell">
+          <div class="m12-bezel-core split-stage">
+            <div class="stage-pane stage-pane--raw">
+              <div class="pane-head">
+                <span class="pane-title">
+                  <span>原生 DSH (<code class="mono">:19081</code> · <code class="mono">assistant.content</code>)</span>
+                </span>
+                <span class="status-badge status-badge--fail">内嵌长 SQL + 清单墙</span>
+              </div>
+              <div class="chat-stream" id="raw-stream" aria-live="polite"></div>
+              <div class="pane-foot">
+                <span class="mono">cmd/deepseek-v4.1-flash</span>
+                <span>单块 Markdown 长文倾倒</span>
+              </div>
+            </div>
+
+            <div class="stage-pane">
+              <div class="pane-head">
+                <span class="pane-title">
+                  <span>挂载 <code class="mono">@nb-corp/nb-speak-dsh</code> (<code class="mono">:19082</code> · <code class="mono">turnTail</code>)</span>
+                </span>
+                <span class="status-badge status-badge--pass">exec.concludeTurn()</span>
+              </div>
+              <div class="chat-stream" id="speak-stream" aria-live="polite"></div>
+              <div class="pane-foot">
+                <span class="mono" id="speak-foot-stat">3 条短气泡 · 1 张制品卡 · 0 次 EMPTY_RESPONSE 重试</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" class="mini-btn mini-btn--accent" id="open-stage-dsh-btn">DSH 实拍图</button>
+                  <button type="button" class="mini-btn" id="toggle-stage-json">工具载荷</button>
+                  <button type="button" class="mini-btn" id="replay-stage-btn">重播节奏</button>
+                </div>
+              </div>
+              <div id="stage-json-drawer" hidden>
+                <pre class="code-well" id="stage-json-preview"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dsh-proof-bar">
+          <div class="dsh-proof-meta">
+            <span class="dsh-proof-pill" id="dsh-proof-badge">DSH 实机 · :19081 vs :19082</span>
+            <span id="dsh-proof-title">420 万行订单表慢分页救火 (:19081 原生 vs :19082 nb-speak-dsh)</span>
+          </div>
+          <button type="button" class="mini-btn mini-btn--accent" id="dsh-proof-open-btn">放大检视双实例桌面实拍</button>
+        </div>
+      </section>
+
+      <section id="install" class="section-gap">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">15 秒零克隆安装命令生成</h2>
+            <p class="section-note">自动持久化至 <code class="mono">~/.dsh/plugins/nb-speak-dsh</code>，规避临时 <code class="mono">npx</code> 缓存清理断链，绝不触碰 <code class="mono">.credentials.yaml</code>。</p>
+          </div>
+          <span class="status-badge status-badge--pass" id="cli-vector-stat">五维风格向量 [1.00, 0.20, 0.10, 0.20, 0.30]</span>
+        </div>
+
+        <div class="m12-bezel-shell">
+          <div class="m12-bezel-core cli-builder">
+            <div class="cli-controls">
+              <div class="field-group">
+                <label class="field-label" for="cli-action">执行动作</label>
+                <select class="soft-select" id="cli-action">
+                  <option value="apply">--apply（一键挂载）</option>
+                  <option value="dry-run">--dry-run（仅预览改动）</option>
+                  <option value="uninstall">--uninstall（无损卸载还原）</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="cli-profile">DSH Profile</label>
+                <select class="soft-select" id="cli-profile">
+                  <option value="web">web</option>
+                  <option value="desktop">desktop</option>
+                  <option value="acp">acp</option>
+                  <option value="headless">headless</option>
+                  <option value="sdk">sdk</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="cli-preset">语气预设</label>
+                <select class="soft-select" id="cli-preset">
+                  <option value="neutral_peer">neutral_peer（平辈搭档）</option>
+                  <option value="sharp_lead">sharp_lead（干脆负责人）</option>
+                  <option value="warm_companion">warm_companion（熟人日常）</option>
+                  <option value="calm_sre">calm_sre（沉稳排障）</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="cli-tts">语音胶囊引擎</label>
+                <select class="soft-select" id="cli-tts">
+                  <option value="elevenlabs">ElevenLabs eleven_v4 真声</option>
+                  <option value="webspeech">免密钥 Web Speech 回退</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cli-output-wrap">
+              <pre class="cli-output-pre mono" id="cli-output-code"></pre>
+              <button type="button" class="copy-pill-btn" id="cli-copy-btn">复制</button>
+            </div>
+
+            <div class="cli-meta-row">
+              <span>要求 Node.js &gt;= 22.19 · 修改前自动快照至 <code class="mono">&lt;DSH_HOME&gt;/.nb-speak-backup/&lt;profile&gt;.json</code></span>
+              <a class="mini-btn" href="https://github.com/NB-Corp/nb-speak-dsh/blob/main/README.zh-CN.md" target="_blank" rel="noopener">完整中文文档</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="architecture" class="section-gap">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">深植 DSH 原生机制</h2>
+            <p class="section-note">精准避开子代理命名冲突、空响应五次重试与折叠步骤抽屉三大痛点。</p>
+          </div>
+        </div>
+
+        <div class="pillar-grid">
+          <article class="pillar-card">
+            <span class="card-kicker">01 · 子代理零撞名</span>
+            <h3 class="card-title">不碰 <code class="mono">send_message</code></h3>
+            <p class="card-desc">原生注册 <code class="mono">send_bubble</code> 与 <code class="mono">send_artifact</code>，DSH 子代理通信工具原封不动，多代理编排零回归。</p>
+          </article>
+          <article class="pillar-card">
+            <span class="card-kicker">02 · 单步干净收束</span>
+            <h3 class="card-title">消灭 <code class="mono">EMPTY_RESPONSE</code></h3>
+            <p class="card-desc">在工具执行步内直接调用 <code class="mono">exec.concludeTurn()</code>，零额外模型往返、零空转五次重试、零重复正文尾巴。</p>
+          </article>
+          <article class="pillar-card">
+            <span class="card-kicker">03 · 零 Token 音频分流</span>
+            <h3 class="card-title"><code class="mono">turnTail</code> 独立渲染</h3>
+            <p class="card-desc">挂载于折叠步骤条之外；<code class="mono">render()</code> 剥离 Base64 音频仅留回执，完整真声经 <code class="mono">presentationMeta</code> 直供前端点播。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-gap">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">NB-Corp 说话三件套</h2>
+            <p class="section-note">按宿主环境独立选用，或三仓联动。</p>
+          </div>
+        </div>
+
+        <div class="trio-grid">
+          <a class="trio-card" data-active="true" href="https://github.com/NB-Corp/nb-speak-dsh" target="_blank" rel="noopener">
+            <span class="card-kicker">DSH 原生插件 · 当前仓库</span>
+            <h3 class="card-title">NB-Corp/nb-speak-dsh</h3>
+            <p class="card-desc">Cordis 双工具 + WebUI <code class="mono">turnTail</code> 短气泡、22 柱波形胶囊与一键复制代码卡。</p>
+            <code class="trio-cmd">npx --yes github:NB-Corp/nb-speak-dsh --apply</code>
+          </a>
+          <a class="trio-card" href="https://nb-corp.github.io/nb-speak/zh/" target="_blank" rel="noopener">
+            <span class="card-kicker">跨框架协议与桥接母仓</span>
+            <h3 class="card-title">NB-Corp/nb-speak</h3>
+            <p class="card-desc">通用 <code class="mono">send_message</code> + <code class="mono">send_artifact</code> SDK、OpenAI/SSE 桥接网关与 <code class="mono">bubble_lint</code>。</p>
+            <code class="trio-cmd">npx --yes github:NB-Corp/nb-speak serve</code>
+          </a>
+          <a class="trio-card" href="https://github.com/NB-Corp/chat-human" target="_blank" rel="noopener">
+            <span class="card-kicker">通用双层 Agent Skill</span>
+            <h3 class="card-title">NB-Corp/chat-human</h3>
+            <p class="card-desc">面向 Codex、Claude Code、Kiki、Cursor 的手机短气泡物理与可插拔 Persona 技能。</p>
+            <code class="trio-cmd">npx skills add NB-Corp/chat-human</code>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <div>
+        <strong>@nb-corp/nb-speak-dsh</strong> · MIT License © 2026 NB-Corp。演示语音由 ElevenLabs (<code class="mono">eleven_v4</code>) 官方预置平台音色合成（<a href="../assets/audio/NOTICE.txt" style="text-decoration:underline;">AI 合成音频说明</a>）。
+      </div>
+      <div class="foot-links">
+        <a href="https://github.com/NB-Corp/nb-speak-dsh">GitHub</a>
+        <a href="https://nb-corp.github.io/nb-speak/zh/">nb-speak</a>
+        <a href="https://github.com/NB-Corp/chat-human">chat-human</a>
+        <a href="../llms.txt">llms.txt</a>
+        <a href="../llms-full.txt">llms-full.txt</a>
+        <a href="../" lang="en">English</a>
+      </div>
+    </footer>
+  </div>
+
+  <div class="lightbox-backdrop" id="dsh-lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" hidden>
+    <div class="lightbox-dialog">
+      <div class="lightbox-head">
+        <strong id="lightbox-title">DSH 双实例实拍对比</strong>
+        <button type="button" class="mini-btn" id="lightbox-close">关闭 (Esc)</button>
+      </div>
+      <div class="scenario-bar" id="lightbox-tabs"></div>
+      <img class="lightbox-img" id="lightbox-img" src="../assets/dsh-hero-showcase-zh.png" alt="DeepSeek Harness 双实例实拍对比">
+    </div>
+  </div>
+
+  <script type="module" src="../assets/app.js"></script>
+</body>
+</html>

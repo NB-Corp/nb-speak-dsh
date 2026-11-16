@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Build TypeScript & WebUI ModuleLoader bundle
+        run: npm run build
+
+      - name: Run unit & installer verification suite
+        run: npm run test:unit
+
+      - name: Verify zero-clone npx tarball install & reversible uninstall
+        run: |
+          TARBALL="$(npm pack --silent)"
+          FAKE_DSH="$(mktemp -d)"
+          printf 'DEEPSEEK_API_KEY: untouched\n' > "$FAKE_DSH/.credentials.yaml"
+          npx --yes "./$TARBALL" --dry-run --dsh-home "$FAKE_DSH" --profile web
+          npx --yes "./$TARBALL" --apply --dsh-home "$FAKE_DSH" --profile web
+          test -f "$FAKE_DSH/plugins/nb-speak-dsh/dist/client.js"
+          npx --yes "./$TARBALL" --uninstall --dsh-home "$FAKE_DSH" --profile web
+          grep -q 'untouched' "$FAKE_DSH/.credentials.yaml"
+          rm -rf "$FAKE_DSH" "./$TARBALL"

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" data-movement="M12">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nb-speak-dsh — Native IM Bubbles &amp; Voice Notes for DeepSeek Harness</title>
+  <meta name="description" content="Zero-dependency DeepSeek Harness (DSH) native IM bubble plugin: send_bubble + exec.concludeTurn(), 22-bar ElevenLabs v4 / Web Speech voice pills, and copyable turnTail artifact cards. Install in one npx command.">
+  <link rel="canonical" href="https://nb-corp.github.io/nb-speak-dsh/">
+  <link rel="alternate" hreflang="en" href="https://nb-corp.github.io/nb-speak-dsh/">
+  <link rel="alternate" hreflang="zh-CN" href="https://nb-corp.github.io/nb-speak-dsh/zh/">
+  <link rel="alternate" hreflang="x-default" href="https://nb-corp.github.io/nb-speak-dsh/">
+  <link rel="icon" href="https://raw.githubusercontent.com/NB-Corp/nb-speak-dsh/main/icon.svg" type="image/svg+xml">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NB-Corp / nb-speak-dsh">
+  <meta property="og:title" content="nb-speak-dsh — Native IM Bubbles &amp; Voice Notes for DeepSeek Harness">
+  <meta property="og:description" content="Replace single-blob Markdown essays in DSH with native turnTail bubbles, 22-bar ElevenLabs v4 voice pills, and copyable SQL/code cards—zero runtime deps, zero subagent collisions.">
+  <meta property="og:url" content="https://nb-corp.github.io/nb-speak-dsh/">
+  <meta property="og:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="nb-speak-dsh — Native IM Bubbles for DeepSeek Harness">
+  <meta name="twitter:description" content="One-command zero-clone DSH plugin: send_bubble + exec.concludeTurn(), 22-bar ElevenLabs v4 voice pills, and copyable artifact cards.">
+  <meta name="twitter:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
+
+  <link rel="stylesheet" href="./assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "@nb-corp/nb-speak-dsh",
+        "alternateName": ["nb-speak-dsh", "NB-Corp/nb-speak-dsh"],
+        "description": "Standalone zero-dependency DeepSeek Harness (DSH) Cordis plugin and WebUI client extension registering send_bubble (exec.concludeTurn()) and send_artifact tools with native conversation.chat.turnTail bubbles, 22-bar ElevenLabs v4 / Web Speech voice pills, and copyable artifact cards.",
+        "codeRepository": "https://github.com/NB-Corp/nb-speak-dsh",
+        "url": "https://nb-corp.github.io/nb-speak-dsh/",
+        "programmingLanguage": ["TypeScript", "JavaScript"],
+        "license": "https://opensource.org/licenses/MIT",
+        "version": "0.3.1",
+        "author": {
+          "@type": "Organization",
+          "name": "NB-Corp",
+          "url": "https://github.com/NB-Corp"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "nb-speak-dsh for DeepSeek Harness",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux, Web",
+        "softwareVersion": "0.3.1",
+        "url": "https://nb-corp.github.io/nb-speak-dsh/",
+        "downloadUrl": "https://github.com/NB-Corp/nb-speak-dsh",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I install @nb-corp/nb-speak-dsh into DeepSeek Harness without cloning the repository?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Run npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web. The installer snapshots your existing profile, persists a clean zero-dependency bundle to ~/.dsh/plugins/nb-speak-dsh so npx cache cleanup never breaks DSH, and never reads or touches .credentials.yaml."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does @nb-corp/nb-speak-dsh use send_bubble and exec.concludeTurn() instead of send_message?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "DeepSeek Harness already reserves send_message({ agent_id, message }) for parent-to-child subagent orchestration, and treats trailing empty assistant turns as EMPTY_RESPONSE with up to 5 retries. Registering send_bubble and calling exec.concludeTurn() ends the turn cleanly inside the tool step with zero collisions and zero retries."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does @nb-corp/nb-speak-dsh require an ElevenLabs API key to play voice notes?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Without ELEVENLABS_API_KEY, VoiceNotePill plays immediately through the browser Web Speech API with full 22-bar waveform progress. Passing ELEVENLABS_API_KEY upgrades playback to ElevenLabs eleven_v4 audio while stripping base64 DataURIs from LLM context."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="page-wrap">
+    <header class="masthead">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span>nb-speak-dsh</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-pill" href="#live-stage" aria-current="page">Live Stage</a>
+        <a class="nav-pill" href="#install">15s Install</a>
+        <a class="nav-pill" href="#architecture">Architecture</a>
+        <a class="nav-pill" href="./llms.txt">llms.txt</a>
+        <a class="nav-pill" href="./zh/" lang="zh-CN">简体中文</a>
+      </nav>
+      <a class="pill-cta" href="https://github.com/NB-Corp/nb-speak-dsh" target="_blank" rel="noopener">
+        <span>GitHub</span>
+        <span class="pill-cta__orb" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </span>
+      </a>
+    </header>
+
+    <main>
+      <section id="live-stage">
+        <div class="hero-top">
+          <div class="hero-copy">
+            <span class="eyebrow-tag">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>@nb-corp/nb-speak-dsh · Zero Runtime Deps</span>
+            </span>
+            <h1 class="hero-title">Native bubbles for DeepSeek Harness.</h1>
+            <p class="hero-sub">Mount <code class="mono">send_bubble</code> + <code class="mono">send_artifact</code> directly into DSH <code class="mono">turnTail</code>—squircle beats, 22-bar ElevenLabs <code class="mono">eleven_v4</code> voice pills, and copyable cards.</p>
+          </div>
+
+          <div class="scenario-bar" id="scenario-tabs" role="tablist" aria-label="DSH live scenarios"></div>
+        </div>
+
+        <div class="hero-cmd-shell">
+          <code class="hero-cmd-code" id="hero-cmd-text">npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web</code>
+          <button type="button" class="copy-pill-btn" id="hero-copy-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-copy-label>Copy</span>
+          </button>
+        </div>
+
+        <div class="m12-bezel-shell">
+          <div class="m12-bezel-core split-stage">
+            <div class="stage-pane stage-pane--raw">
+              <div class="pane-head">
+                <span class="pane-title">
+                  <span>Vanilla DSH (<code class="mono">:19081</code> · <code class="mono">assistant.content</code>)</span>
+                </span>
+                <span class="status-badge status-badge--fail">inline SQL + essay wall</span>
+              </div>
+              <div class="chat-stream" id="raw-stream" aria-live="polite"></div>
+              <div class="pane-foot">
+                <span class="mono">cmd/deepseek-v4.1-flash</span>
+                <span>Single Markdown dump</span>
+              </div>
+            </div>
+
+            <div class="stage-pane">
+              <div class="pane-head">
+                <span class="pane-title">
+                  <span>With <code class="mono">@nb-corp/nb-speak-dsh</code> (<code class="mono">:19082</code> · <code class="mono">turnTail</code>)</span>
+                </span>
+                <span class="status-badge status-badge--pass">exec.concludeTurn()</span>
+              </div>
+              <div class="chat-stream" id="speak-stream" aria-live="polite"></div>
+              <div class="pane-foot">
+                <span class="mono" id="speak-foot-stat">3 bubbles · 1 card · 0 EMPTY_RESPONSE retries</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" class="mini-btn mini-btn--accent" id="open-stage-dsh-btn">DSH Screenshot</button>
+                  <button type="button" class="mini-btn" id="toggle-stage-json">Tool JSON</button>
+                  <button type="button" class="mini-btn" id="replay-stage-btn">Replay</button>
+                </div>
+              </div>
+              <div id="stage-json-drawer" hidden>
+                <pre class="code-well" id="stage-json-preview"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dsh-proof-bar">
+          <div class="dsh-proof-meta">
+            <span class="dsh-proof-pill" id="dsh-proof-badge">DSH Live · :19081 vs :19082</span>
+            <span id="dsh-proof-title">4.2M-Row Postgres Slow Pagination (:19081 Vanilla vs :19082 nb-speak-dsh)</span>
+          </div>
+          <button type="button" class="mini-btn mini-btn--accent" id="dsh-proof-open-btn">Inspect Full-Res Dual Capture</button>
+        </div>
+      </section>
+
+      <section id="install" class="section-gap">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">15-Second Zero-Clone Installer</h2>
+            <p class="section-note">Persists <code class="mono">~/.dsh/plugins/nb-speak-dsh</code> so <code class="mono">npx</code> cache cleanup never breaks DSH, and never touches <code class="mono">.credentials.yaml</code>.</p>
+          </div>
+          <span class="status-badge status-badge--pass" id="cli-vector-stat">5-axis style vector [1.00, 0.20, 0.10, 0.20, 0.30]</span>
+        </div>
+
+        <div class="m12-bezel-shell">
+          <div class="m12-bezel-core cli-builder">
+            <div class="cli-controls">
+              <div class="field-group">
+                <label class="field-label" for="cli-action">Action</label>
+                <select class="soft-select" id="cli-action">
+                  <option value="apply">--apply (Install)</option>
+                  <option value="dry-run">--dry-run (Preview only)</option>
+                  <option value="uninstall">--uninstall (Restore backup)</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="cli-profile">DSH Profile</label>
+                <select class="soft-select" id="cli-profile">
+                  <option value="web">web</option>
+                  <option value="desktop">desktop</option>
+                  <option value="acp">acp</option>
+                  <option value="headless">headless</option>
+                  <option value="sdk">sdk</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="cli-preset">Persona Preset</label>
+                <select class="soft-select" id="cli-preset">
+                  <option value="neutral_peer">neutral_peer (Default)</option>
+                  <option value="sharp_lead">sharp_lead</option>
+                  <option value="warm_companion">warm_companion</option>
+                  <option value="calm_sre">calm_sre</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="cli-tts">Voice Note Engine</label>
+                <select class="soft-select" id="cli-tts">
+                  <option value="elevenlabs">ElevenLabs eleven_v4 (&lt;audio&gt;)</option>
+                  <option value="webspeech">Zero-Key Web Speech Fallback</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cli-output-wrap">
+              <pre class="cli-output-pre mono" id="cli-output-code"></pre>
+              <button type="button" class="copy-pill-btn" id="cli-copy-btn">Copy</button>
+            </div>
+
+            <div class="cli-meta-row">
+              <span>Requires Node.js &gt;= 22.19 · Snapshots original files to <code class="mono">&lt;DSH_HOME&gt;/.nb-speak-backup/&lt;profile&gt;.json</code></span>
+              <a class="mini-btn" href="https://github.com/NB-Corp/nb-speak-dsh#15-second-zero-clone-install" target="_blank" rel="noopener">Full CLI Flags</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="architecture" class="section-gap">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Built for DSH Internals</h2>
+            <p class="section-note">Designed around Cordis host services, subagent tool boundaries, and WebUI turn reducers.</p>
+          </div>
+        </div>
+
+        <div class="pillar-grid">
+          <article class="pillar-card">
+            <span class="card-kicker">01 · SUBAGENT-SAFE TOOLS</span>
+            <h3 class="card-title">Zero <code class="mono">send_message</code> Collision</h3>
+            <p class="card-desc">Registers <code class="mono">send_bubble</code> and <code class="mono">send_artifact</code> natively so DSH's <code class="mono">send_message({ agent_id })</code> stays untouched for subagent delegation.</p>
+          </article>
+          <article class="pillar-card">
+            <span class="card-kicker">02 · ONE-STEP TURN END</span>
+            <h3 class="card-title">Zero <code class="mono">EMPTY_RESPONSE</code> Retries</h3>
+            <p class="card-desc">Invokes <code class="mono">exec.concludeTurn()</code> inside <code class="mono">send_bubble</code>—eliminating 5x empty-turn retry loops and duplicate Markdown tails.</p>
+          </article>
+          <article class="pillar-card">
+            <span class="card-kicker">03 · ZERO-TOKEN AUDIO META</span>
+            <h3 class="card-title">Native <code class="mono">turnTail</code> Surface</h3>
+            <p class="card-desc">Mounts outside collapsed step drawers while <code class="mono">render()</code> strips MP3 DataURIs—<code class="mono">0</code> audio tokens enter LLM context.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-gap">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">The NB-Corp Speaking Trio</h2>
+            <p class="section-note">Pick the exact layer for your harness, or combine all three.</p>
+          </div>
+        </div>
+
+        <div class="trio-grid">
+          <a class="trio-card" data-active="true" href="https://github.com/NB-Corp/nb-speak-dsh" target="_blank" rel="noopener">
+            <span class="card-kicker">DSH NATIVE PLUGIN · THIS REPO</span>
+            <h3 class="card-title">NB-Corp/nb-speak-dsh</h3>
+            <p class="card-desc">Cordis tools + WebUI <code class="mono">turnTail</code> squircle bubbles, 22-bar voice pills, and copyable artifact cards.</p>
+            <code class="trio-cmd">npx --yes github:NB-Corp/nb-speak-dsh --apply</code>
+          </a>
+          <a class="trio-card" href="https://nb-corp.github.io/nb-speak/" target="_blank" rel="noopener">
+            <span class="card-kicker">PROTOCOL SDK &amp; SSE BRIDGE</span>
+            <h3 class="card-title">NB-Corp/nb-speak</h3>
+            <p class="card-desc">Cross-framework <code class="mono">send_message</code> + <code class="mono">send_artifact</code> schemas, OpenAI/SSE proxy, and <code class="mono">bubble_lint</code>.</p>
+            <code class="trio-cmd">npx --yes github:NB-Corp/nb-speak serve</code>
+          </a>
+          <a class="trio-card" href="https://github.com/NB-Corp/chat-human" target="_blank" rel="noopener">
+            <span class="card-kicker">UNIVERSAL AGENT SKILL</span>
+            <h3 class="card-title">NB-Corp/chat-human</h3>
+            <p class="card-desc">Two-layer IM bubble physics &amp; pluggable persona Skill for Codex, Claude Code, Kiki, and Cursor.</p>
+            <code class="trio-cmd">npx skills add NB-Corp/chat-human</code>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <div>
+        <strong>@nb-corp/nb-speak-dsh</strong> · MIT License © 2026 NB-Corp. Demo voice clips synthesized via ElevenLabs (<code class="mono">eleven_v4</code>) official premade voices (<a href="./assets/audio/NOTICE.txt" style="text-decoration:underline;">AI Audio Notice</a>).
+      </div>
+      <div class="foot-links">
+        <a href="https://github.com/NB-Corp/nb-speak-dsh">GitHub</a>
+        <a href="https://nb-corp.github.io/nb-speak/">nb-speak</a>
+        <a href="https://github.com/NB-Corp/chat-human">chat-human</a>
+        <a href="./llms.txt">llms.txt</a>
+        <a href="./llms-full.txt">llms-full.txt</a>
+        <a href="./zh/" lang="zh-CN">简体中文</a>
+      </div>
+    </footer>
+  </div>
+
+  <div class="lightbox-backdrop" id="dsh-lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" hidden>
+    <div class="lightbox-dialog">
+      <div class="lightbox-head">
+        <strong id="lightbox-title">Dual-Instance DSH Capture</strong>
+        <button type="button" class="mini-btn" id="lightbox-close">Close (Esc)</button>
+      </div>
+      <div class="scenario-bar" id="lightbox-tabs"></div>
+      <img class="lightbox-img" id="lightbox-img" src="./assets/dsh-hero-showcase.png" alt="Live DeepSeek Harness comparison">
+    </div>
+  </div>
+
+  <script type="module" src="./assets/app.js"></script>
+</body>
+</html>

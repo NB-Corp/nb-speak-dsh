@@ -1,0 +1,234 @@
+import { execFile } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { promisify } from 'node:util';
+                                               
+
+const execFileAsync = promisify(execFile);
+
+                            
+             
+          
+          
+         
+              
+             
+              
+
+                                       
+                            
+                                    
+ 
+
+                                            
+                        
+                                   
+                                                
+
+                                     
+                                          
+                                                      
+                                   
+                                   
+                                                              
+                                 
+ 
+
+const ELEVENLABS_VOICE_ALIASES                                   = {
+  jessica: 'cgSgspJ2msm6clMCkdW9',
+  sarah: 'EXAVITQu4vr4xnSDxMaL',
+  ziyue: '5qr5FEpvZGzmVOPBS55W',
+  bobo: 's2LjOZIlsH2Yu4p6MtAK',
+  shanshan: 'ByhETIclHirOlWnWKhHc',
+  julia: 'tOuLUAIdXShmWH7PEUrU',
+};
+
+const NON_MANDARIN_VOICES = new Set([
+  'cgSgspJ2msm6clMCkdW9',
+  'EXAVITQu4vr4xnSDxMaL',
+]);
+
+const CJK_TEST_RE = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
+
+export function resolveElevenLabsVoiceId(rawVoice                    , emotion                )         {
+  const cleaned = (rawVoice ?? '').trim();
+  if (cleaned && cleaned.toLowerCase() !== 'auto') {
+    return ELEVENLABS_VOICE_ALIASES[cleaned.toLowerCase()] ?? cleaned;
+  }
+  if (emotion === 'warm' || emotion === 'playful' || emotion === 'relieved') {
+    return ELEVENLABS_VOICE_ALIASES.jessica ;
+  }
+  return ELEVENLABS_VOICE_ALIASES.julia ;
+}
+
+export function prepareElevenLabsMandarinText(rawText        , voiceId        )   
+                        
+                                 
+  {
+  let text = rawText.trim();
+  const isMandarin = CJK_TEST_RE.test(text);
+  if (!isMandarin) {
+    return { text };
+  }
+  if (text && !/[。！？!?…~”’」』）)\]]$/.test(text)) {
+    text += /(?:吗|么|是不是|好不好|行不行|对不对|要不要|能不能)$/.test(text) ? '？' : '。';
+  }
+  if (NON_MANDARIN_VOICES.has(voiceId) && !text.slice(0, 40).toLowerCase().includes('mandarin')) {
+    text = `[Standard Mandarin accent] ${text}`;
+  }
+  return { text, languageCode: 'zh' };
+}
+
+function estimateAudioDurationFromMp3Bytes(byteLength        , kbps = 128)                     {
+  if (byteLength <= 512) return undefined;
+  const seconds = (byteLength * 8) / (kbps * 1000);
+  return Math.max(1, Math.min(30, Math.round(seconds)));
+}
+
+async function runBridgeScript(
+  bridgeScript        ,
+  text        ,
+  voice        ,
+  model        ,
+  pythonBin        ,
+)                                            {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nb-speak-tts-'));
+  try {
+    const reqPath = path.join(tmpDir, 'request.json');
+    const resPath = path.join(tmpDir, 'result.json');
+    const outPath = path.join(tmpDir, 'voice.mp3');
+    const payload = {
+      action: 'submit',
+      input: {
+        model,
+        request: {
+          kind: 'tts',
+          voice,
+          format: 'mp3',
+          text,
+          options: {
+            model,
+          },
+        },
+      },
+      output: outPath,
+      resultFile: resPath,
+    };
+    fs.writeFileSync(reqPath, JSON.stringify(payload), 'utf8');
+    await execFileAsync(pythonBin, [bridgeScript, reqPath], {
+      timeout: 45_000,
+      windowsHide: true,
+    });
+    if (!fs.existsSync(resPath)) return undefined;
+    const outcome = JSON.parse(fs.readFileSync(resPath, 'utf8'))     
+                     
+                                                          
+     ;
+    const artifact = outcome.artifacts?.[0];
+    if (outcome.state !== 'complete' || !artifact?.path || !fs.existsSync(artifact.path)) {
+      return undefined;
+    }
+    const audioBytes = fs.readFileSync(artifact.path);
+    if (audioBytes.byteLength <= 256) return undefined;
+    const mime = artifact.mime || (artifact.path.endsWith('.ogg') ? 'audio/ogg' : 'audio/mpeg');
+    const kbps = artifact.path.endsWith('.ogg') ? 128 : 192;
+    return {
+      audioSrc: `data:${mime};base64,${audioBytes.toString('base64')}`,
+      durationSeconds: estimateAudioDurationFromMp3Bytes(audioBytes.byteLength, kbps),
+    };
+  } catch {
+    return undefined;
+  } finally {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {
+      // Ignore temp cleanup failure
+    }
+  }
+}
+
+async function runDirectElevenLabs(
+  apiKey        ,
+  text        ,
+  emotion                ,
+  rawVoice                    ,
+  model        ,
+  fetchImpl           ,
+)                                            {
+  try {
+    const voiceId = resolveElevenLabsVoiceId(rawVoice, emotion);
+    const prepared = prepareElevenLabsMandarinText(text, voiceId);
+    const isMandarin = prepared.languageCode === 'zh';
+    const url = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`;
+    const body                          = {
+      text: prepared.text,
+      model_id: model,
+      voice_settings: {
+        stability: isMandarin ? 0.48 : 0.42,
+        similarity_boost: 0.78,
+      },
+    };
+    if (prepared.languageCode) {
+      body.language_code = prepared.languageCode;
+    }
+    const resp = await fetchImpl(url, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) return undefined;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.byteLength <= 256) return undefined;
+    return {
+      audioSrc: `data:audio/mpeg;base64,${buf.toString('base64')}`,
+      durationSeconds: estimateAudioDurationFromMp3Bytes(buf.byteLength, 128),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export function createVoiceNoteSynthesizer(config                     = {})                       {
+  const env = config.env ?? process.env;
+  const fetchImpl = config.fetchImpl ?? fetch;
+
+  return async ({ text, emotion }) => {
+    const cleanText = text.trim();
+    if (!cleanText) return undefined;
+
+    const model = (config.getModel?.() || env.NB_SPEAK_TTS_MODEL || 'eleven_v4').trim() || 'eleven_v4';
+    const rawVoice = (config.getVoice?.() || env.NB_SPEAK_TTS_VOICE || 'auto').trim();
+    const bridgeScript = (config.getBridgeScript?.() || env.NB_SPEAK_TTS_BRIDGE || '').trim();
+
+    if (bridgeScript && fs.existsSync(bridgeScript)) {
+      const voiceForBridge =
+        rawVoice && rawVoice.toLowerCase() !== 'auto'
+          ? rawVoice
+          : emotion === 'warm' || emotion === 'playful' || emotion === 'relieved'
+            ? 'Jessica'
+            : 'Julia';
+      const pythonBin = (env.NB_SPEAK_PYTHON || 'python').trim();
+      const clip = await runBridgeScript(bridgeScript, cleanText, voiceForBridge, model, pythonBin);
+      if (clip) return clip;
+    }
+
+    const explicitKey = config.getApiKey ? await config.getApiKey() : '';
+    const apiKey = (
+      explicitKey ||
+      env.ELEVENLABS_API_KEY ||
+      env.ELEVEN_API_KEY ||
+      env.XI_API_KEY ||
+      ''
+    ).trim();
+
+    if (!apiKey) {
+      return undefined;
+    }
+
+    return runDirectElevenLabs(apiKey, cleanText, emotion, rawVoice, model, fetchImpl);
+  };
+}

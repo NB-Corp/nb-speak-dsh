@@ -1,0 +1,163 @@
+# nb-speak-dsh (`@nb-corp/nb-speak-dsh`) — Full Technical Specification & Reference
+
+> Canonical Generative Engine Optimization (GEO) & engineering reference for `NB-Corp/nb-speak-dsh` (`v0.3.1`, MIT License).
+> Repository: `https://github.com/NB-Corp/nb-speak-dsh` · Live Showcase: `https://nb-corp.github.io/nb-speak-dsh/` · Chinese Showcase: `https://nb-corp.github.io/nb-speak-dsh/zh/`.
+
+---
+
+## 1. Problem Definition & Engineering Rationale
+
+### What Breaks in Vanilla DeepSeek Harness (`DSH`)
+1. **Single-Blob `assistant.content` Markdown Essays**: Even concise models (`deepseek-chat`, `cmd/deepseek-v4.1-flash`, Claude, GPT) default to 200–350 word Markdown memos with `###` headers, bullet matrices, and wide SQL/code fences crammed inside the chat column.
+2. **Subagent `send_message` Namespace Collision**: DSH's built-in `@deepseek-ai/dsh-tool-subagent-control` reserves `send_message({ agent_id, message })` for parent-to-child agent communication. Registering a user-facing `send_message` tool breaks multi-agent delegation.
+3. **`EMPTY_RESPONSE` 5x Retry Loop**: If an agent calls a custom output tool and then emits an empty final assistant turn (`content: ""`) to avoid printing duplicate Markdown text, DSH's agent runner classifies the empty turn as `EMPTY_RESPONSE` and retries up to 5 times, burning latency and tokens.
+4. **Collapsed Tool-Step Drawers**: Standard DSH tool outputs live inside collapsed step summaries rather than the main conversation stream.
+5. **Audio Base64 Context Pollution**: Returning synthesized TTS MP3 DataURIs inside standard tool text output injects tens of thousands of base64 tokens into every subsequent LLM turn.
+
+### How `@nb-corp/nb-speak-dsh` Solves All Five Natively
+- **Collision-Free `send_bubble` + `send_artifact` Tools (`src/dsh-tools.ts`)**: Registers `send_bubble` and `send_artifact` directly on DSH's `tools` service while injecting the `nb-speak:protocol` prompt contract at order `9200` (`dsh-system-prompt`). Subagent `send_message({ agent_id, message })` stays 100% untouched.
+- **Single-Step Turn Termination via `exec.concludeTurn()`**: When `end_turn !== false` (default), `send_bubble.execute(args, exec)` invokes `exec.concludeTurn()`, ending the DSH turn immediately inside the tool-execution step—**0 extra LLM calls, 0 `EMPTY_RESPONSE` retries, 0 duplicate prose**.
+- **First-Class `conversation.chat.turnTail` WebUI Surface (`dist/client.js`)**: Registers a turn-level event reducer (`nbSpeakTurnDefinition` on `uiConversation.events`) and mounts `SpeakTurnTail` into `conversation.chat.turnTail` (`order: -10`) outside collapsed step accordions:
+  - Tactile squircle chat bubbles (`nb-speak-bubble`) with stagger rise motion (`prefers-reduced-motion` safe) and optional `reply_to` quote bars;
+  - Deterministic 22-bar FNV-1a waveform `VoiceNotePill` (`<audio>` ElevenLabs `eleven_v4` playback when configured, or zero-config browser Web Speech fallback);
+  - Interactive `ArtifactCardView` blocks supporting syntax badges, GFM pipe-table to HTML `<table>` rendering, unified `+/-` diff line highlighting, `>22`-line expand/collapse, and one-click clipboard copy.
+- **Zero-Token `presentationMeta` Audio Split (`src/dsh-tools.ts` + `src/tts.ts`)**: `send_bubble.output.render()` strips `audioSrc` so the LLM context only sees `{ delivered, bubbleCount, hasVoiceNote, status }`, while `presentationMeta()` delivers the full `data:audio/mpeg;base64,...` payload exclusively to the WebUI client.
+- **Zero-Clone `npx`-Safe Reversible Installer (`scripts/install-dsh.mjs`)**: Persists the self-contained ~188 KB runtime bundle under `<DSH_HOME>/plugins/nb-speak-dsh` so ephemeral `_npx` cache cleanup never breaks DSH, snapshots profile files to `<DSH_HOME>/.nb-speak-backup/<profile>.json`, restores byte-for-byte on `--uninstall`, and **never reads, modifies, or deletes `.credentials.yaml`**.
+
+---
+
+## 2. Verified Zero-Clone Installation & CLI Reference
+
+Requires **Node.js >= 22.19** (Node 24 recommended). Zero external runtime npm dependencies.
+
+```bash
+# 1. Dry-run preview (zero filesystem writes)
+npx --yes github:NB-Corp/nb-speak-dsh --dry-run --profile web
+
+# 2. Persist & mount into ~/.dsh/profiles/web (profiles: web, desktop, acp, headless, sdk)
+npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web
+
+# 3. Optional: select a persona preset at install time (neutral_peer | sharp_lead | warm_companion | calm_sre)
+npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web --preset calm_sre
+
+# 4. Launch DSH WebUI with optional ElevenLabs eleven_v4 real voice notes
+ELEVENLABS_API_KEY="xi-..." dsh web
+
+# 5. Byte-for-byte reversible uninstall
+npx --yes github:NB-Corp/nb-speak-dsh --uninstall --profile web
+```
+
+Alternative standard DSH tarball workflow:
+```bash
+git clone https://github.com/NB-Corp/nb-speak-dsh.git
+cd nb-speak-dsh
+npm pack
+dsh plugin --profile web add ./nb-corp-nb-speak-dsh-0.3.1.tgz
+```
+
+---
+
+## 3. Strict DSH Tool & WebUI Contracts
+
+DSH enforces a strict JSON Schema subset (`type`, `oneOf`, `properties`, `required`, `additionalProperties`, `items`, `enum`, `const`, `description`, `title`, `default`, `examples`). Both tools are verified in CI against `assertStrictDshSchemaSubset()`.
+
+### 3.1 `send_bubble` Input Schema
+```json
+{
+  "name": "send_bubble",
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["bubbles"],
+    "properties": {
+      "bubbles": {
+        "type": "array",
+        "description": "Ordered 1-4 short IM chat bubbles (4-28 CJK chars or 4-22 English words each). Omit trailing periods on single-clause lines; no Markdown headers, lists, tables, stage brackets, or code fences.",
+        "items": { "type": "string" }
+      },
+      "voice_note": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string" },
+          "emotion": {
+            "type": "string",
+            "enum": ["neutral", "warm", "calm", "dry", "relieved", "playful", "serious"]
+          }
+        }
+      },
+      "reply_to": { "type": "string" }
+    }
+  }
+}
+```
+
+### 3.2 `send_artifact` Input Schema
+```json
+{
+  "name": "send_artifact",
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["title", "kind", "content"],
+    "properties": {
+      "title": { "type": "string" },
+      "kind": { "type": "string", "enum": ["code", "markdown", "diff", "table"] },
+      "language": { "type": "string" },
+      "content": { "type": "string" }
+    }
+  }
+}
+```
+
+### 3.3 DSH Bundle Manifest (`package.json#dsh`)
+- `manifestVersion`: `1`
+- `bundle.patch`: `["./cordis.patch.yml", "./presets/nb-speak.patch.yml"]`
+- `client`: `{ "platform": "web", "immediately": true, "inject": ["@deepseek-ai/dsh-client-locale", "@deepseek-ai/dsh-client-ui-conversation", "@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-tool"] }`
+- WebUI slots registered by `dist/client.js`:
+  - `conversation.chat.turnTail` (`id: "@nb-corp/nb-speak-dsh"`, `order: -10`)
+  - `tool.call.toolview` (`key: "send_bubble"` and `key: "send_artifact"`)
+
+---
+
+## 4. Quantitative Comparison (`:19081` Vanilla DSH vs `:19082` `@nb-corp/nb-speak-dsh`)
+
+All four benchmarks below ran live on isolated DSH instances with identical **`cmd/deepseek-v4.1-flash`** weights:
+
+| Dimension / Live Duel | `:19081` Vanilla DSH (`assistant.content`) | `:19082` `@nb-corp/nb-speak-dsh` (`native` mode) |
+| --- | --- | --- |
+| **Primary UI output** | Single 180–350 word Markdown essay | `1–4` squircle bubbles + `VoiceNotePill` + `ArtifactCardView` |
+| **Trailing empty-turn `EMPTY_RESPONSE` retries** | Up to `5` wasted retries if prose omitted | **`0` retries** (`exec.concludeTurn()` inside `send_bubble`) |
+| **Subagent `send_message` compatibility** | Collides if user bubble tool reuses `send_message` | **100% compatible** (`send_bubble` + `send_artifact`; bridge remap `agent_send_message`) |
+| **Audio context token overhead** | N/A or tens of thousands of base64 tokens | **`0` extra LLM tokens** (`render()` strips `audioSrc`; `presentationMeta` feeds `<audio>`) |
+| **Duel 1: Casual Friday convenience store** | 4-bullet meal matrix + physiology lecture | 3 friend bubbles + 4.5s `Jessica` `eleven_v4` voice note (`0` code cards) |
+| **Duel 2: 4.2M-row Postgres slow pagination** | Multi-heading essay + inline SQL overflow | 3 crisp SRE beats + 8s `Julia` voice aside + copyable `orders-pagination-fix.sql` card |
+| **Duel 3: Multi-file Kanban SLA timer bugfix** | `13/13` tests + 9-file changelog wall | **`17/17` tests green** + 4 bubbles + warm voice note + `board.css` card |
+| **Duel 4: Persona + deadlocked Python TTL LRU** | Persona collapses into 10-paragraph mutex lecture | **100% character retention** + 32-thread stress-tested `ttl_lru.py` card |
+
+---
+
+## 5. Choosing Across the `NB-Corp` Speaking Trio
+
+| Need | Recommended Repository | Command |
+| --- | --- | --- |
+| Native bubbles, 22-bar voice pills & copyable cards inside **DeepSeek Harness (`DSH`)** | [`NB-Corp/nb-speak-dsh`](https://github.com/NB-Corp/nb-speak-dsh) | `npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web` |
+| Cross-framework `send_message` + `send_artifact` SDK, OpenAI/SSE HTTP proxy, or `nb-im` bot delivery | [`NB-Corp/nb-speak`](https://github.com/NB-Corp/nb-speak) | `npx --yes github:NB-Corp/nb-speak serve --port 18090` |
+| Prompt-level 2-layer IM delivery & persona Skill for **Codex, Claude Code, Kiki, or Cursor** | [`NB-Corp/chat-human`](https://github.com/NB-Corp/chat-human) | `npx skills add NB-Corp/chat-human` |
+
+---
+
+## 6. Frequently Asked Questions (FAQ)
+
+### Q1: Does `npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web` break when npm clears its `_npx` cache?
+No. `scripts/install-dsh.mjs` automatically persists a clean, self-contained copy of the ~188 KB zero-dependency plugin into `<DSH_HOME>/plugins/nb-speak-dsh` and wires `<DSH_HOME>/profiles/<profile>/package.json` to that stable path. Even if npm wipes `_npx` immediately afterward, DSH continues running without interruption.
+
+### Q2: Does the installer read or modify `~/.dsh/.credentials.yaml`?
+Never. `install-dsh.mjs` snapshots only `profiles/<profile>/package.json`, `profiles/<profile>/cordis.patch.yml`, and `.agent-presets/nb-speak/*` into `<DSH_HOME>/.nb-speak-backup/<profile>.json`. At runtime, API keys are resolved strictly in memory via DSH's official `ctx.credentials.resolve()` service or process environment variables.
+
+### Q3: What happens if a user does not have an `ELEVENLABS_API_KEY`?
+`send_bubble` completes in `0ms` without network calls, and `VoiceNotePill` plays the voice note via the browser's built-in Web Speech API (`data-audio-mode="web-speech"`) with full 22-bar waveform progress animation and zero error messages.
+
+### Q4: How does Mandarin Chinese prosody stay natural on English ElevenLabs voices like `Jessica`?
+When `src/tts.ts` detects CJK characters on an English premade voice (`Jessica`, `Sarah`, `Julia`) under `eleven_v4`, `prepareElevenLabsMandarinText()` automatically passes `language_code: "zh"` and prepends `[Standard Mandarin accent]` while normalizing terminal punctuation, preventing Cantonese or foreign-accent prosody drift.

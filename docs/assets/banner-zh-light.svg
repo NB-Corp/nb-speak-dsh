@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 268" width="1200" height="268">
+  <rect width="1200" height="268" rx="28" fill="#f7f4ee"/>
+  <rect x="8" y="8" width="1184" height="252" rx="22" fill="#fcfaf6" stroke="#e4dfd5" stroke-width="1.5"/>
+
+  <rect x="48" y="42" width="44" height="44" rx="13" fill="#284b37"/>
+  <path d="M79 63a2 2 0 0 1-2 2H65l-4 4V55a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="#faf8f4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="106" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', sans-serif" font-size="33" font-weight="800" letter-spacing="-0.8" fill="#1d1b18">nb-speak-dsh</text>
+  <rect x="358" y="51" width="132" height="26" rx="13" fill="#e5efe8"/>
+  <text x="424" y="68" text-anchor="middle" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', sans-serif" font-size="12" font-weight="700" fill="#20412f">DSH 原生插件</text>
+
+  <text x="48" y="130" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="25" font-weight="700" fill="#284b37">为 DeepSeek Harness 注入真气泡与贴麦语音</text>
+  <text x="48" y="168" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="15.5" fill="#57524a">原生 send_bubble + send_artifact 双工具 · exec.concludeTurn() 零重试结束回合</text>
+  <text x="48" y="194" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="15.5" fill="#57524a">22 柱 ElevenLabs v4 / Web Speech 波形语音胶囊 · 可展开一键复制代码与 SQL 卡片</text>
+  <text x="48" y="228" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" fill="#284b37">npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web</text>
+
+  <rect x="748" y="28" width="414" height="212" rx="20" fill="#f3efe6" stroke="#e2dcd0" stroke-width="1.2"/>
+  <rect x="768" y="44" width="298" height="34" rx="15" fill="#ffffff" stroke="#e2dcd0" stroke-width="1"/>
+  <text x="784" y="66" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', sans-serif" font-size="12.5" font-weight="600" fill="#1d1b18">白天直接跑 CONCURRENTLY，读写不阻塞</text>
+
+  <rect x="768" y="84" width="286" height="34" rx="15" fill="#ffffff" stroke="#e2dcd0" stroke-width="1"/>
+  <text x="784" y="106" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', sans-serif" font-size="12.5" font-weight="600" fill="#1d1b18">深翻页换游标，顺手把 count(*) 停掉</text>
+
+  <rect x="768" y="126" width="256" height="34" rx="17" fill="#e5efe8" stroke="#c3dacb" stroke-width="1"/>
+  <circle cx="786" cy="143" r="10" fill="#284b37"/>
+  <polygon points="784,138 784,148 792,143" fill="#faf8f4"/>
+  <rect x="804" y="138" width="2.8" height="10" rx="1.4" fill="#284b37"/>
+  <rect x="810" y="134" width="2.8" height="18" rx="1.4" fill="#284b37"/>
+  <rect x="816" y="137" width="2.8" height="12" rx="1.4" fill="#284b37"/>
+  <rect x="822" y="133" width="2.8" height="20" rx="1.4" fill="#284b37"/>
+  <rect x="828" y="136" width="2.8" height="14" rx="1.4" fill="#284b37"/>
+  <rect x="834" y="139" width="2.8" height="8" rx="1.4" fill="#7aa68b"/>
+  <rect x="840" y="135" width="2.8" height="16" rx="1.4" fill="#7aa68b"/>
+  <text x="854" y="148" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#20412f">0:08 · eleven_v4</text>
+
+  <rect x="768" y="168" width="374" height="56" rx="12" fill="#faf8f3" stroke="#d8d0c2" stroke-width="1"/>
+  <text x="784" y="189" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#1d1b18">orders-pagination-fix.sql</text>
+  <rect x="974" y="176" width="38" height="17" rx="5" fill="#e5efe8"/>
+  <text x="993" y="188" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10" font-weight="700" fill="#284b37">SQL</text>
+  <text x="1096" y="188" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', sans-serif" font-size="11" font-weight="600" fill="#57524a">复制</text>
+  <text x="784" y="211" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" fill="#284b37">CREATE INDEX CONCURRENTLY idx_orders_tenant...</text>
+</svg>

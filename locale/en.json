@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "nb-speak · Human IM Bubbles & Artifacts",
+    "description": "Registers native send_bubble and send_artifact tools in DeepSeek Harness and renders tactile IM chat bubbles, playable voice notes, and interactive artifact cards directly in the WebUI."
+  }
+}

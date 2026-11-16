@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#221e18" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="#f7f4ee"/>
+
+  <!-- Eyebrow Pill -->
+  <rect x="52" y="48" width="218" height="32" rx="16" fill="#e5efe8"/>
+  <text x="161" y="69" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="700" fill="#20412f">NB-Corp · DSH Native Plugin</text>
+
+  <!-- Left Title Column -->
+  <text x="52" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="56" font-weight="800" letter-spacing="-1.6" fill="#1d1b18">nb-speak-dsh</text>
+  <text x="52" y="196" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="21" font-weight="700" fill="#284b37">Native IM bubbles &amp; voice notes</text>
+  <text x="52" y="224" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="21" font-weight="700" fill="#284b37">for DeepSeek Harness.</text>
+
+  <text x="52" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#57524a">Zero runtime npm deps. Zero subagent collisions.</text>
+  <text x="52" y="296" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#57524a">Zero EMPTY_RESPONSE retry loops.</text>
+
+  <!-- 3 Architecture Pills -->
+  <rect x="52" y="338" width="386" height="50" rx="16" fill="#ffffff" stroke="#e4dfd5" stroke-width="1.5"/>
+  <circle cx="80" cy="363" r="6" fill="#284b37"/>
+  <text x="98" y="369" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14" font-weight="600" fill="#1d1b18">send_bubble + exec.concludeTurn()</text>
+
+  <rect x="52" y="400" width="386" height="50" rx="16" fill="#ffffff" stroke="#e4dfd5" stroke-width="1.5"/>
+  <circle cx="80" cy="425" r="6" fill="#284b37"/>
+  <text x="98" y="431" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14" font-weight="600" fill="#1d1b18">conversation.chat.turnTail WebUI</text>
+
+  <rect x="52" y="462" width="386" height="50" rx="16" fill="#e5efe8" stroke="#c7dccf" stroke-width="1.5"/>
+  <text x="76" y="493" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14" font-weight="700" fill="#20412f">ElevenLabs eleven_v4 + Web Speech</text>
+
+  <text x="52" y="568" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12.5" font-weight="600" fill="#57524a">npx --yes github:NB-Corp/nb-speak-dsh --apply</text>
+
+  <!-- Right M12 Concentric DSH Duel Card -->
+  <rect x="476" y="46" width="676" height="538" rx="30" fill="#ece7dd" stroke="#dcd5c8" stroke-width="1.5" filter="url(#softShadow)"/>
+  <rect x="486" y="56" width="656" height="518" rx="23" fill="#fcfaf6" stroke="#ffffff" stroke-width="1.5"/>
+
+  <line x1="772" y1="56" x2="772" y2="574" stroke="#e7e1d6" stroke-width="1.5"/>
+
+  <!-- Left Pane: :19081 Vanilla DSH -->
+  <text x="508" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13.5" font-weight="700" fill="#6b645b">Vanilla DSH (:19081)</text>
+  <rect x="668" y="79" width="84" height="22" rx="11" fill="#f9e6e2"/>
+  <text x="710" y="94" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" font-weight="700" fill="#8d2d1e">essay blob</text>
+
+  <rect x="508" y="118" width="244" height="414" rx="16" fill="#f5f1e9" stroke="#e6cfc9" stroke-width="1.2"/>
+  <text x="524" y="148" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#3a352f">### 1. Spend 10m Diagnosing</text>
+  <text x="524" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#5e584f">Deep OFFSET and missing composite</text>
+  <text x="524" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#5e584f">indexes are two distinct issues:</text>
+  <rect x="524" y="208" width="212" height="84" rx="8" fill="#ebe5da"/>
+  <text x="534" y="230" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" fill="#4f4a42">EXPLAIN (ANALYZE, BUFFERS)</text>
+  <text x="534" y="248" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" fill="#4f4a42">SELECT * FROM orders WHERE...</text>
+  <text x="534" y="266" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" fill="#4f4a42">ORDER BY created_at LIMIT 20</text>
+  <text x="524" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#5e584f">• Seq Scan + Sort bottleneck</text>
+  <text x="524" y="340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#5e584f">• Rows Removed by Filter: 200k</text>
+  <text x="524" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#5e584f">• Inline count(*) table scan</text>
+  <text x="524" y="400" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#3a352f">### 2. Lock-Free Index Guide</text>
+  <text x="524" y="424" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#8d2d1e">Hope this helps! Let me know if</text>
+  <text x="524" y="442" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#8d2d1e">you need more SQL examples!</text>
+  <text x="524" y="506" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" fill="#8d2d1e">× inline SQL + checklist wall</text>
+
+  <!-- Right Pane: :19082 nb-speak-dsh -->
+  <text x="794" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13.5" font-weight="700" fill="#1d1b18">@nb-corp/nb-speak-dsh (:19082)</text>
+  <rect x="1034" y="79" width="88" height="22" rx="11" fill="#e5efe8"/>
+  <text x="1078" y="94" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" font-weight="700" fill="#20412f">turnTail UI</text>
+
+  <rect x="794" y="122" width="314" height="40" rx="15" fill="#f2f4f8" stroke="#dfe3ec" stroke-width="1"/>
+  <text x="810" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12.5" font-weight="500" fill="#15181e">Hold off scaling—spike is deep OFFSET + index</text>
+
+  <rect x="794" y="170" width="320" height="40" rx="15" fill="#f2f4f8" stroke="#dfe3ec" stroke-width="1"/>
+  <text x="810" y="195" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12.5" font-weight="500" fill="#15181e">Build CONCURRENTLY now, reads/writes stay live</text>
+
+  <rect x="794" y="218" width="298" height="40" rx="15" fill="#f2f4f8" stroke="#dfe3ec" stroke-width="1"/>
+  <text x="810" y="243" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12.5" font-weight="500" fill="#15181e">Swap deep pages to keyset cursors next</text>
+
+  <!-- 22-bar Voice Pill -->
+  <rect x="794" y="268" width="294" height="68" rx="15" fill="#f2f4f8" stroke="#dfe3ec" stroke-width="1"/>
+  <circle cx="816" cy="290" r="12" fill="#1d5c4b"/>
+  <polygon points="813,284 813,296 822,290" fill="#ffffff"/>
+  <rect x="838" y="284" width="3" height="12" rx="1.5" fill="#1d5c4b"/>
+  <rect x="844" y="279" width="3" height="22" rx="1.5" fill="#1d5c4b"/>
+  <rect x="850" y="283" width="3" height="14" rx="1.5" fill="#1d5c4b"/>
+  <rect x="856" y="278" width="3" height="24" rx="1.5" fill="#1d5c4b"/>
+  <rect x="862" y="282" width="3" height="16" rx="1.5" fill="#1d5c4b"/>
+  <rect x="868" y="285" width="3" height="10" rx="1.5" fill="#90b5ab"/>
+  <rect x="874" y="280" width="3" height="20" rx="1.5" fill="#90b5ab"/>
+  <rect x="880" y="284" width="3" height="12" rx="1.5" fill="#90b5ab"/>
+  <text x="896" y="294" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" font-weight="600" fill="#5a6270">0:08 · calm</text>
+  <line x1="806" y1="308" x2="1076" y2="308" stroke="#e2e6ee" stroke-width="1"/>
+  <text x="808" y="325" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11.5" fill="#5a6270">Land the composite B-tree index first before touching code.</text>
+
+  <!-- Artifact Card -->
+  <rect x="794" y="348" width="328" height="184" rx="12" fill="#f7f8fa" stroke="#dde2ea" stroke-width="1"/>
+  <rect x="794" y="348" width="328" height="32" rx="12" fill="#eef1f5"/>
+  <text x="810" y="369" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#15181e">orders-pagination-fix.sql</text>
+  <rect x="996" y="356" width="34" height="16" rx="4" fill="#dcebe6"/>
+  <text x="1013" y="368" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="9.5" font-weight="700" fill="#1d5c4b">SQL</text>
+  <rect x="1070" y="355" width="42" height="18" rx="5" fill="#ffffff" stroke="#d5dbe5" stroke-width="1"/>
+  <text x="1091" y="367" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="10" font-weight="600" fill="#5a6270">Copy</text>
+  <text x="810" y="404" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" fill="#1d5c4b">SET lock_timeout = '3s';</text>
+  <text x="810" y="426" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" fill="#15181e">CREATE INDEX CONCURRENTLY IF NOT EXISTS</text>
+  <text x="810" y="446" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" fill="#15181e">  idx_orders_tenant_created_id</text>
+  <text x="810" y="466" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" fill="#15181e">  ON orders (tenant_id, created_at DESC);</text>
+  <text x="810" y="496" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10.5" fill="#5a6270">-- 0 table locks · keyset &lt; 3ms</text>
+</svg>

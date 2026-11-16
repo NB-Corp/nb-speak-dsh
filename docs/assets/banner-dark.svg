@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 268" width="1200" height="268">
+  <rect width="1200" height="268" rx="28" fill="#151816"/>
+  <rect x="8" y="8" width="1184" height="252" rx="22" fill="#1c201d" stroke="#2c332e" stroke-width="1.5"/>
+
+  <rect x="48" y="42" width="44" height="44" rx="13" fill="#3a6b4e"/>
+  <path d="M79 63a2 2 0 0 1-2 2H65l-4 4V55a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="#f4f7f5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="106" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="33" font-weight="800" letter-spacing="-0.8" fill="#f2f4f2">nb-speak-dsh</text>
+  <rect x="358" y="51" width="126" height="26" rx="13" fill="#24382c"/>
+  <text x="421" y="68" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700" fill="#8fd4ab">DSH Plugin</text>
+
+  <text x="48" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="23.5" font-weight="700" fill="#8fd4ab">Native IM bubbles &amp; voice notes for DeepSeek Harness.</text>
+  <text x="48" y="166" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#a9b2ac">First-class send_bubble + send_artifact tools, exec.concludeTurn() zero-retry termination,</text>
+  <text x="48" y="191" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#a9b2ac">22-bar ElevenLabs v4 / Web Speech voice pills, and copyable turnTail artifact cards.</text>
+  <text x="48" y="226" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" fill="#8fd4ab">npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web</text>
+
+  <rect x="748" y="28" width="414" height="212" rx="20" fill="#232825" stroke="#323a35" stroke-width="1.2"/>
+  <rect x="768" y="44" width="292" height="34" rx="15" fill="#2c332f" stroke="#3b443e" stroke-width="1"/>
+  <text x="784" y="66" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12.5" font-weight="600" fill="#edf1ee">Build index CONCURRENTLY, zero locks</text>
+
+  <rect x="768" y="84" width="308" height="34" rx="15" fill="#2c332f" stroke="#3b443e" stroke-width="1"/>
+  <text x="784" y="106" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12.5" font-weight="600" fill="#edf1ee">Swap deep pages to keyset cursors next</text>
+
+  <rect x="768" y="126" width="252" height="34" rx="17" fill="#24382c" stroke="#365744" stroke-width="1"/>
+  <circle cx="786" cy="143" r="10" fill="#4b8864"/>
+  <polygon points="784,138 784,148 792,143" fill="#f4f7f5"/>
+  <rect x="804" y="138" width="2.8" height="10" rx="1.4" fill="#8fd4ab"/>
+  <rect x="810" y="134" width="2.8" height="18" rx="1.4" fill="#8fd4ab"/>
+  <rect x="816" y="137" width="2.8" height="12" rx="1.4" fill="#8fd4ab"/>
+  <rect x="822" y="133" width="2.8" height="20" rx="1.4" fill="#8fd4ab"/>
+  <rect x="828" y="136" width="2.8" height="14" rx="1.4" fill="#8fd4ab"/>
+  <rect x="834" y="139" width="2.8" height="8" rx="1.4" fill="#466b56"/>
+  <rect x="840" y="135" width="2.8" height="16" rx="1.4" fill="#466b56"/>
+  <text x="854" y="148" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#9de0b8">0:08 · eleven_v4</text>
+
+  <rect x="768" y="168" width="374" height="56" rx="12" fill="#1e2320" stroke="#333c36" stroke-width="1"/>
+  <text x="784" y="189" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#edf1ee">orders-pagination-fix.sql</text>
+  <rect x="974" y="176" width="38" height="17" rx="5" fill="#24382c"/>
+  <text x="993" y="188" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10" font-weight="700" fill="#8fd4ab">SQL</text>
+  <text x="1096" y="188" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="600" fill="#a9b2ac">Copy</text>
+  <text x="784" y="211" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" fill="#8fd4ab">CREATE INDEX CONCURRENTLY idx_orders_tenant...</text>
+</svg>
