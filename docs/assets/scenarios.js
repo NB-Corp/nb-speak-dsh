@@ -1,4 +1,4 @@
-// Authentic live DeepSeek Harness (:19081 Vanilla vs :19082 @nb-corp/nb-speak-dsh) scenarios & ElevenLabs eleven_v4 clips
+// Authentic live DeepSeek Harness (:19081 Vanilla vs :19082 @nb-corp/nb-speak-dsh) scenarios & optional voice demo clips
 export const SCENARIOS = {
   en: [
     {
@@ -35,7 +35,7 @@ Hope this helps! Please run CREATE INDEX CONCURRENTLY and let me know if you nee
       },
       voiceAudio: {
         file: 'sql-en.mp3',
-        voice: 'Sarah · eleven_v4',
+        voice: 'Calm · AI Voice',
         durationSec: 8,
       },
       dshCapture: {
@@ -94,7 +94,7 @@ Also note that taste buds dull when overtired, so eat something warm first. Enjo
       },
       voiceAudio: {
         file: 'casual-en.mp3',
-        voice: 'Jessica · eleven_v4',
+        voice: 'Warm · AI Voice',
         durationSec: 6,
       },
       dshCapture: {
@@ -134,7 +134,7 @@ Let me know if you need anything else!`,
       },
       voiceAudio: {
         file: 'kanban-en.mp3',
-        voice: 'Sarah · eleven_v4',
+        voice: 'Calm · AI Voice',
         durationSec: 7,
       },
       dshCapture: {
@@ -188,7 +188,7 @@ Hope this helps! Remember to buy an umbrella and get some rest.`,
       },
       voiceAudio: {
         file: 'persona-en.mp3',
-        voice: 'Jessica · eleven_v4',
+        voice: 'Warm · AI Voice',
         durationSec: 7,
       },
       dshCapture: {
@@ -281,7 +281,7 @@ ORDER BY created_at DESC LIMIT 20 OFFSET 200000;
       },
       voiceAudio: {
         file: 'sql-zh.mp3',
-        voice: 'Julia · eleven_v4',
+        voice: '沉稳 · 示例语音',
         durationSec: 8,
       },
       dshCapture: {
@@ -340,7 +340,7 @@ SELECT id, tenant_id, total_cents, status, created_at
       },
       voiceAudio: {
         file: 'casual-zh.mp3',
-        voice: 'Jessica · eleven_v4',
+        voice: 'Warm · AI Voice',
         durationSec: 5,
       },
       dshCapture: {
@@ -379,7 +379,7 @@ SELECT id, tenant_id, total_cents, status, created_at
       },
       voiceAudio: {
         file: 'kanban-zh.mp3',
-        voice: 'ZiYue · eleven_v4',
+        voice: '温和 · 示例语音',
         durationSec: 7,
       },
       dshCapture: {
@@ -430,7 +430,7 @@ SELECT id, tenant_id, total_cents, status, created_at
       },
       voiceAudio: {
         file: 'persona-zh.mp3',
-        voice: 'Jessica · eleven_v4',
+        voice: 'Warm · AI Voice',
         durationSec: 6,
       },
       dshCapture: {

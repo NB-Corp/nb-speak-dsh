@@ -26,7 +26,19 @@ export type VoiceNoteSynthesizer = (input: {
   readonly emotion: TtsEmotionHint;
 }) => Promise<SynthesizedVoiceClip | undefined>;
 
+export const TTS_PROVIDER_IDS = ['auto', 'openai', 'bridge', 'elevenlabs', 'webspeech'] as const;
+export type TtsProviderId = (typeof TTS_PROVIDER_IDS)[number];
+
+export const DEFAULT_TTS_KEY_REFS = [
+  'NB_SPEAK_TTS_API_KEY',
+  'ELEVENLABS_API_KEY',
+  'ELEVEN_API_KEY',
+  'XI_API_KEY',
+] as const;
+
 export interface TtsSynthesisConfig {
+  readonly getProvider?: () => string;
+  readonly getBaseUrl?: () => string;
   readonly getBridgeScript?: () => string;
   readonly getApiKey?: () => Promise<string> | string;
   readonly getVoice?: () => string;
@@ -148,6 +160,55 @@ async function runBridgeScript(
   }
 }
 
+export function resolveOpenAiSpeechEndpoint(baseUrl: string): string {
+  const clean = baseUrl.trim().replace(/\/+$/, '');
+  if (!clean) return '';
+  if (clean.endsWith('/audio/speech')) return clean;
+  if (clean.endsWith('/v1')) return `${clean}/audio/speech`;
+  return `${clean}/v1/audio/speech`;
+}
+
+async function runOpenAiCompatibleSpeech(
+  baseUrl: string,
+  apiKey: string,
+  text: string,
+  rawVoice: string | undefined,
+  rawModel: string | undefined,
+  fetchImpl: FetchLike,
+): Promise<SynthesizedVoiceClip | undefined> {
+  try {
+    const url = resolveOpenAiSpeechEndpoint(baseUrl);
+    if (!url) return undefined;
+    const model = rawModel && rawModel.toLowerCase() !== 'auto' ? rawModel : 'tts-1';
+    const voice = rawVoice && rawVoice.toLowerCase() !== 'auto' ? rawVoice : 'alloy';
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+    };
+    if (apiKey) {
+      headers.authorization = `Bearer ${apiKey}`;
+    }
+    const resp = await fetchImpl(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model,
+        input: text,
+        voice,
+        response_format: 'mp3',
+      }),
+    });
+    if (!resp.ok) return undefined;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.byteLength <= 256) return undefined;
+    return {
+      audioSrc: `data:audio/mpeg;base64,${buf.toString('base64')}`,
+      durationSeconds: estimateAudioDurationFromMp3Bytes(buf.byteLength, 128),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 async function runDirectElevenLabs(
   apiKey: string,
   text: string,
@@ -200,35 +261,68 @@ export function createVoiceNoteSynthesizer(config: TtsSynthesisConfig = {}): Voi
     const cleanText = text.trim();
     if (!cleanText) return undefined;
 
-    const model = (config.getModel?.() || env.NB_SPEAK_TTS_MODEL || 'eleven_v4').trim() || 'eleven_v4';
+    const provider = (config.getProvider?.() || env.NB_SPEAK_TTS_PROVIDER || 'auto').trim().toLowerCase();
+    if (provider === 'webspeech') {
+      return undefined;
+    }
+
+    const rawModel = (config.getModel?.() || env.NB_SPEAK_TTS_MODEL || 'auto').trim();
     const rawVoice = (config.getVoice?.() || env.NB_SPEAK_TTS_VOICE || 'auto').trim();
     const bridgeScript = (config.getBridgeScript?.() || env.NB_SPEAK_TTS_BRIDGE || '').trim();
+    const baseUrl = (config.getBaseUrl?.() || env.NB_SPEAK_TTS_BASE_URL || '').trim();
+    const explicitKey = config.getApiKey ? await config.getApiKey() : '';
 
-    if (bridgeScript && fs.existsSync(bridgeScript)) {
+    const tryBridge = async () => {
+      if (!bridgeScript || !fs.existsSync(bridgeScript)) return undefined;
+      const bridgeModel = rawModel && rawModel.toLowerCase() !== 'auto' ? rawModel : 'default';
       const voiceForBridge =
         rawVoice && rawVoice.toLowerCase() !== 'auto'
           ? rawVoice
           : emotion === 'warm' || emotion === 'playful' || emotion === 'relieved'
-            ? 'Jessica'
-            : 'Julia';
+            ? 'warm'
+            : 'calm';
       const pythonBin = (env.NB_SPEAK_PYTHON || 'python').trim();
-      const clip = await runBridgeScript(bridgeScript, cleanText, voiceForBridge, model, pythonBin);
-      if (clip) return clip;
+      return runBridgeScript(bridgeScript, cleanText, voiceForBridge, bridgeModel, pythonBin);
+    };
+
+    if (provider === 'bridge') {
+      return tryBridge();
     }
 
-    const explicitKey = config.getApiKey ? await config.getApiKey() : '';
-    const apiKey = (
+    if (provider === 'openai') {
+      const openaiKey = (explicitKey || env.NB_SPEAK_TTS_API_KEY || env.OPENAI_API_KEY || '').trim();
+      const targetBase = baseUrl || (openaiKey ? 'https://api.openai.com/v1' : '');
+      if (!targetBase) return undefined;
+      return runOpenAiCompatibleSpeech(targetBase, openaiKey, cleanText, rawVoice, rawModel, fetchImpl);
+    }
+
+    const elevenKey = (
       explicitKey ||
       env.ELEVENLABS_API_KEY ||
       env.ELEVEN_API_KEY ||
       env.XI_API_KEY ||
       ''
     ).trim();
+    const elevenModel = rawModel && rawModel.toLowerCase() !== 'auto' ? rawModel : 'eleven_v4';
 
-    if (!apiKey) {
+    if (provider === 'elevenlabs') {
+      if (!elevenKey) return undefined;
+      return runDirectElevenLabs(elevenKey, cleanText, emotion, rawVoice, elevenModel, fetchImpl);
+    }
+
+    const bridgeClip = await tryBridge();
+    if (bridgeClip) return bridgeClip;
+
+    if (baseUrl) {
+      const openaiKey = (explicitKey || env.NB_SPEAK_TTS_API_KEY || env.OPENAI_API_KEY || '').trim();
+      const openaiClip = await runOpenAiCompatibleSpeech(baseUrl, openaiKey, cleanText, rawVoice, rawModel, fetchImpl);
+      if (openaiClip) return openaiClip;
+    }
+
+    if (!elevenKey) {
       return undefined;
     }
 
-    return runDirectElevenLabs(apiKey, cleanText, emotion, rawVoice, model, fetchImpl);
+    return runDirectElevenLabs(elevenKey, cleanText, emotion, rawVoice, elevenModel, fetchImpl);
   };
 }

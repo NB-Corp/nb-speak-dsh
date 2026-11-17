@@ -187,9 +187,17 @@ function describeWeightBias(weights                  )         {
   return notes.length > 0 ? `Style vector [${weights.join(', ')}]: ${notes.join('; ')}.` : `Style vector [${weights.join(', ')}].`;
 }
 
+export function parseEnvBoolean(val         )          {
+  if (typeof val === 'boolean') return val;
+  if (typeof val !== 'string') return false;
+  const cleaned = val.trim().toLowerCase();
+  return cleaned === '1' || cleaned === 'true' || cleaned === 'yes' || cleaned === 'on';
+}
+
 export function buildNativeSpeakPromptSection(options   
                                                     
                                        
+                                                        
  )         {
   const sliderCfg = options.getSliderConfig();
   const customSoul = options.getCustomSoul().trim();
@@ -199,8 +207,24 @@ export function buildNativeSpeakPromptSection(options
     sliderCfg.preset && sliderCfg.preset !== 'custom' && sliderCfg.preset in PERSONA_GUIDANCE
       ? sliderCfg.preset
       : 'neutral_peer';
+  const voiceNotesEnabled =
+    typeof options.enableVoiceNotes === 'function'
+      ? Boolean(options.enableVoiceNotes())
+      : Boolean(options.enableVoiceNotes);
 
   const personaLine = customSoul ? `Custom voice directive: ${customSoul}` : PERSONA_GUIDANCE[presetKey];
+
+  const bubbleRules = [
+    '   - Pass `bubbles`: 1–4 short thumb-typed chat lines (4–28 CJK chars or 4–22 English words each).',
+    '   - Omit trailing periods (`。` / `.`) on short single-clause lines.',
+    '   - Never put `#` headers, bullet lists, Markdown tables, code fences, stage brackets (`（叹气）`, `*sighs*`), or decorative UI emojis inside `bubbles`.',
+    ...(voiceNotesEnabled
+      ? [
+          '   - Optionally attach `voice_note: { text, emotion }` when a short mic-side spoken aside (15–38 CJK chars or 10–25 English words, ~4–9s; break every 2 short clauses with `。` or `？`, spell numbers naturally, zero `[giggles]` tags, complementing rather than repeating the text bubbles) adds genuine warmth or emphasis.',
+        ]
+      : []),
+    '   - Calling `send_bubble` automatically concludes your turn once all tool calls in that step finish—do not call `send_bubble` mid-turn while you still have workspace tools left to run.',
+  ];
 
   return [
     '# Human IM Delivery Protocol (`send_bubble` + `send_artifact`)',
@@ -208,11 +232,7 @@ export function buildNativeSpeakPromptSection(options
     'You are connected to a real-time IM bubble UI inside DeepSeek Harness.',
     '1. **Work first, then finish with `send_bubble`**: Run all required workspace tools (`read`, `glob`, `grep`, `edit`, `write`, `pwsh`/`bash`, etc.) directly first. Keep intermediate `assistant.content` empty while running workspace tools.',
     '2. **Deliver every user-facing reply through a single `send_bubble` call at the end of the turn**:',
-    '   - Pass `bubbles`: 1–4 short thumb-typed chat lines (4–28 CJK chars or 4–22 English words each).',
-    '   - Omit trailing periods (`。` / `.`) on short single-clause lines.',
-    '   - Never put `#` headers, bullet lists, Markdown tables, code fences, stage brackets (`（叹气）`, `*sighs*`), or decorative UI emojis inside `bubbles`.',
-    '   - Optionally attach `voice_note: { text, emotion }` when a short mic-side spoken aside (15–38 CJK chars or 10–25 English words, ~4–9s; break every 2 short clauses with `。` or `？`, spell numbers naturally, zero `[giggles]` tags, complementing rather than repeating the text bubbles) adds genuine warmth or emphasis.',
-    '   - Calling `send_bubble` automatically concludes your turn once all tool calls in that step finish—do not call `send_bubble` mid-turn while you still have workspace tools left to run.',
+    ...bubbleRules,
     '3. **Offload structured material to `send_artifact`**:',
     '   - Whenever sharing shell commands, runnable code, SQL queries, unified diffs, or Markdown comparison tables, call `send_artifact` alongside `send_bubble` in the same step.',
     '   - Keep `send_artifact.content` clean, minimal, and directly copy-runnable (no 40-line tutorial essays inside comments).',
@@ -227,46 +247,65 @@ export function buildNativeSpeakPromptSection(options
 
 export function createSendBubbleToolDefinition(options   
                                                       
+                                                        
   = {})                          {
   const synthesizeVoiceNote = options.synthesizeVoiceNote ?? createVoiceNoteSynthesizer();
+  const isVoiceNotesEnabled = ()          => {
+    if (typeof options.enableVoiceNotes === 'function') {
+      return Boolean(options.enableVoiceNotes());
+    }
+    if (typeof options.enableVoiceNotes === 'boolean') {
+      return options.enableVoiceNotes;
+    }
+    return parseEnvBoolean(process.env.NB_SPEAK_VOICE_NOTES);
+  };
+  const initialVoiceEnabled = isVoiceNotesEnabled();
+
+  const parameterProperties                          = {
+    bubbles: {
+      type: 'array',
+      description:
+        'Ordered 1-4 short IM chat bubbles (4-28 CJK chars or 4-22 English words each). Omit trailing periods on single-clause lines; no Markdown headers, lists, tables, stage brackets, or code fences.',
+      items: { type: 'string' },
+    },
+    ...(initialVoiceEnabled
+      ? {
+          voice_note: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['text'],
+            description:
+              'Optional playable voice-note pill shown beneath the text bubbles (4-10s spoken aside complementing—never verbatim repeating—the text bubbles).',
+            properties: {
+              text: {
+                type: 'string',
+                description: 'Natural spoken transcript for the voice note (spell out numbers naturally).',
+              },
+              emotion: {
+                type: 'string',
+                enum: ['neutral', 'warm', 'calm', 'dry', 'relieved', 'playful', 'serious'],
+                description: 'Spoken tone label.',
+              },
+            },
+          },
+        }
+      : {}),
+    reply_to: {
+      type: 'string',
+      description: 'Optional short quote or message anchor being replied to.',
+    },
+  };
+
   return {
     name: SEND_BUBBLE_TOOL_NAME,
-    description:
-      'Render 1-4 short thumb-typed IM chat bubbles (and an optional playable voice_note pill) directly in the human user\'s chat UI and conclude the assistant turn. Call this ONCE at the end of your turn (alongside send_artifact if sharing code/SQL/diffs/tables) after all workspace reads/edits/tests are complete. Do NOT use for subagents (use send_message with agent_id for subagents).',
+    description: initialVoiceEnabled
+      ? 'Render 1-4 short thumb-typed IM chat bubbles (and an optional playable voice_note pill) directly in the human user\'s chat UI and conclude the assistant turn. Call this ONCE at the end of your turn (alongside send_artifact if sharing code/SQL/diffs/tables) after all workspace reads/edits/tests are complete. Do NOT use for subagents (use send_message with agent_id for subagents).'
+      : 'Render 1-4 short thumb-typed IM chat bubbles directly in the human user\'s chat UI and conclude the assistant turn. Call this ONCE at the end of your turn (alongside send_artifact if sharing code/SQL/diffs/tables) after all workspace reads/edits/tests are complete. Do NOT use for subagents (use send_message with agent_id for subagents).',
     parameters: {
       type: 'object',
       additionalProperties: false,
       required: ['bubbles'],
-      properties: {
-        bubbles: {
-          type: 'array',
-          description:
-            'Ordered 1-4 short IM chat bubbles (4-28 CJK chars or 4-22 English words each). Omit trailing periods on single-clause lines; no Markdown headers, lists, tables, stage brackets, or code fences.',
-          items: { type: 'string' },
-        },
-        voice_note: {
-          type: 'object',
-          additionalProperties: false,
-          required: ['text'],
-          description:
-            'Optional playable voice-note pill shown beneath the text bubbles (4-10s spoken aside complementing—never verbatim repeating—the text bubbles).',
-          properties: {
-            text: {
-              type: 'string',
-              description: 'Natural spoken transcript for the voice note (spell out numbers naturally).',
-            },
-            emotion: {
-              type: 'string',
-              enum: ['neutral', 'warm', 'calm', 'dry', 'relieved', 'playful', 'serious'],
-              description: 'Spoken tone label.',
-            },
-          },
-        },
-        reply_to: {
-          type: 'string',
-          description: 'Optional short quote or message anchor being replied to.',
-        },
-      },
+      properties: parameterProperties,
     },
     output: {
       schema: {
@@ -299,11 +338,15 @@ export function createSendBubbleToolDefinition(options
         const cleaned = (Array.isArray(args?.bubbles) ? args.bubbles : [])
           .map((item) => sanitizeSpokenBubble(item))
           .filter((item) => item.length > 0);
-        const vnText = typeof args?.voice_note?.text === 'string' ? args.voice_note.text.trim() : '';
+        const allowVoice = isVoiceNotesEnabled() && value?.hasVoiceNote !== false;
+        const vnText = allowVoice && typeof args?.voice_note?.text === 'string' ? args.voice_note.text.trim() : '';
         const rawEmotion = args?.voice_note?.emotion;
         const emotion                   =
           rawEmotion && VALID_EMOTIONS.has(rawEmotion) ? rawEmotion : 'neutral';
-        const audioSrc = typeof value?.audioSrc === 'string' && value.audioSrc.trim() ? value.audioSrc.trim() : undefined;
+        const audioSrc =
+          allowVoice && typeof value?.audioSrc === 'string' && value.audioSrc.trim()
+            ? value.audioSrc.trim()
+            : undefined;
         const durationSeconds =
           typeof value?.audioDurationSeconds === 'number' && Number.isFinite(value.audioDurationSeconds) && value.audioDurationSeconds > 0
             ? Math.max(1, Math.round(value.audioDurationSeconds))
@@ -338,7 +381,8 @@ export function createSendBubbleToolDefinition(options
       if (cleaned.length > 6) {
         throw new Error('send_bubble accepts at most 6 bubbles per turn; offload dense material to send_artifact');
       }
-      const vnText = typeof args.voice_note?.text === 'string' ? args.voice_note.text.trim() : '';
+      const allowVoice = isVoiceNotesEnabled();
+      const vnText = allowVoice && typeof args.voice_note?.text === 'string' ? args.voice_note.text.trim() : '';
       const rawEmotion = args.voice_note?.emotion;
       const emotion                   =
         rawEmotion && VALID_EMOTIONS.has(rawEmotion) ? rawEmotion : 'neutral';
@@ -454,10 +498,14 @@ export function registerSpeakToolsAndPrompt(
                                                       
                                          
                                                         
+                                                          
    ,
 )             {
   const disposeBubble = tools.register(
-    createSendBubbleToolDefinition({ synthesizeVoiceNote: options.synthesizeVoiceNote }),
+    createSendBubbleToolDefinition({
+      synthesizeVoiceNote: options.synthesizeVoiceNote,
+      enableVoiceNotes: options.enableVoiceNotes,
+    }),
   );
   const disposeArtifact = tools.register(createSendArtifactToolDefinition());
   const disposePrompt = systemPrompt.section({

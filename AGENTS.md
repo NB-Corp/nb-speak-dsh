@@ -10,7 +10,7 @@
 | Path | Responsibility |
 | --- | --- |
 | `src/dsh-tools.ts` | Native `send_bubble` (`exec.concludeTurn()`) & `send_artifact` tool definitions + `nb-speak:protocol` system prompt section (`order: 9200`). |
-| `src/tts.ts` | Optional ElevenLabs `eleven_v4` speech synthesis (`ELEVENLABS_API_KEY` or `NB_SPEAK_TTS_BRIDGE`) with Mandarin prosody anchoring; strips base64 audio from LLM `render()` output while passing `audioSrc` to WebUI `presentationMeta`. |
+| `src/tts.ts` | Optional provider-agnostic speech synthesis when `enableVoiceNotes` is enabled (OpenAI-compatible `/v1/audio/speech`, local JSON bridge `NB_SPEAK_TTS_BRIDGE`, cloud TTS APIs, or browser Web Speech fallback); strips base64 audio from LLM `render()` output while passing `audioSrc` to WebUI `presentationMeta`. |
 | `src/client-model.ts` | DSH WebUI turn reducer (`nbSpeakTurnDefinition`), deterministic FNV-1a 22-bar waveform math, GFM pipe-table parser, and Web Speech fallback controller. |
 | `src/client-ui.ts` + `src/client.css` | React WebUI slot components (`conversation.chat.turnTail`, `tool.call.toolview`) compiled into `dist/client.js`. |
 | `src/plugin.ts` | Cordis host lifecycle, Schemastery volatile settings panel, credential store lookup, and optional Mode A (`skill`) / Mode B (`voice-model`) bridge wiring. |

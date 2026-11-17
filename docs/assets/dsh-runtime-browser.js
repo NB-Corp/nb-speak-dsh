@@ -341,7 +341,7 @@ export const nbSpeakTurnDefinition = {
                     : estimateClientVoiceSeconds(vn.text),
                 ...(audioSrc ? { audioSrc } : {}),
               }
-            : existing?.voiceNote;
+            : undefined;
         const nextMap = new Map(prev.bubbleMap);
         nextMap.set(callId, {
           callId,

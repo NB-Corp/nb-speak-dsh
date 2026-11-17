@@ -24,26 +24,18 @@ import {
                                   
 } from './upstream.js';
 
-const SPEAK_USER_TOOLS                                = [
-  {
-    type: 'function',
-    function: {
-      name: 'send_message',
+function buildSpeakUserTools(enableVoiceNotes         )                                {
+  const sendMsgProperties                          = {
+    bubbles: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 4,
       description:
-        'Deliver 1-4 short thumb-typed IM chat bubbles to the human user (with optional complementary voice_note on the final bubble). Always use this instead of raw Markdown prose when replying to the human user. Do NOT use this for subagents; use agent_send_message for subagents.',
-      parameters: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['bubbles'],
-        properties: {
-          bubbles: {
-            type: 'array',
-            minItems: 1,
-            maxItems: 4,
-            description:
-              'Ordered 1-4 short chat bubbles (4-28 CJK chars or 4-22 English words each). Default to 1-2 crisp bubbles; omit trailing periods on short single-clause lines; never embed Markdown headers, bullet lists, tables, or code fences inside bubbles.',
-            items: { type: 'string', minLength: 1 },
-          },
+        'Ordered 1-4 short chat bubbles (4-28 CJK chars or 4-22 English words each). Default to 1-2 crisp bubbles; omit trailing periods on short single-clause lines; never embed Markdown headers, bullet lists, tables, or code fences inside bubbles.',
+      items: { type: 'string', minLength: 1 },
+    },
+    ...(enableVoiceNotes
+      ? {
           voice_note: {
             type: 'object',
             additionalProperties: false,
@@ -60,42 +52,59 @@ const SPEAK_USER_TOOLS                                = [
               },
             },
           },
-          reply_to: { type: 'string' },
-          end_turn: { type: 'boolean', default: true },
+        }
+      : {}),
+    reply_to: { type: 'string' },
+    end_turn: { type: 'boolean', default: true },
+  };
+
+  return [
+    {
+      type: 'function',
+      function: {
+        name: 'send_message',
+        description: enableVoiceNotes
+          ? 'Deliver 1-4 short thumb-typed IM chat bubbles to the human user (with optional complementary voice_note on the final bubble). Always use this instead of raw Markdown prose when replying to the human user. Do NOT use this for subagents; use agent_send_message for subagents.'
+          : 'Deliver 1-4 short thumb-typed IM chat bubbles to the human user. Always use this instead of raw Markdown prose when replying to the human user. Do NOT use this for subagents; use agent_send_message for subagents.',
+        parameters: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['bubbles'],
+          properties: sendMsgProperties,
         },
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'send_artifact',
-      description:
-        'Offload essential shell commands, multi-line code, SQL queries, unified diffs, or Markdown comparison tables as a clean copyable card outside narrow chat bubbles. Always call send_message alongside send_artifact in the same turn, and keep artifact content minimal and pure (no tutorial comment walls or unrequested variants).',
-      parameters: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['title', 'kind', 'content'],
-        properties: {
-          title: {
-            type: 'string',
-            description: 'Concise filename or card title (e.g. "start-bridge.sh", "orders-keyset.sql", "ttl_lru_cache.py").',
-          },
-          kind: { type: 'string', enum: ['code', 'markdown', 'diff', 'table'] },
-          language: {
-            type: 'string',
-            description: 'Language tag when kind is code or diff (e.g. "bash", "sql", "python", "ts").',
-          },
-          content: {
-            type: 'string',
-            description:
-              'Minimal, clean runnable code, command, SQL query, unified diff, or Markdown table. Do NOT stuff prose explanations, multi-option tutorials, or comment walls inside code comments.',
+    {
+      type: 'function',
+      function: {
+        name: 'send_artifact',
+        description:
+          'Offload essential shell commands, multi-line code, SQL queries, unified diffs, or Markdown comparison tables as a clean copyable card outside narrow chat bubbles. Always call send_message alongside send_artifact in the same turn, and keep artifact content minimal and pure (no tutorial comment walls or unrequested variants).',
+        parameters: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['title', 'kind', 'content'],
+          properties: {
+            title: {
+              type: 'string',
+              description: 'Concise filename or card title (e.g. "start-bridge.sh", "orders-keyset.sql", "ttl_lru_cache.py").',
+            },
+            kind: { type: 'string', enum: ['code', 'markdown', 'diff', 'table'] },
+            language: {
+              type: 'string',
+              description: 'Language tag when kind is code or diff (e.g. "bash", "sql", "python", "ts").',
+            },
+            content: {
+              type: 'string',
+              description:
+                'Minimal, clean runnable code, command, SQL query, unified diff, or Markdown table. Do NOT stuff prose explanations, multi-option tutorials, or comment walls inside code comments.',
+            },
           },
         },
       },
     },
-  },
-];
+  ];
+}
 
 const PERSONA_LAYER_TEXT                                                                  = {
   neutral_peer:
@@ -134,12 +143,17 @@ function sanitizeBubbleLine(raw        )         {
   return s;
 }
 
-function buildSkillSystemLayer(personaId                                       , customSoul         )         {
+function buildSkillSystemLayer(
+  personaId                                       ,
+  customSoul         ,
+  enableVoiceNotes = false,
+)         {
   const voice = customSoul?.trim() ? customSoul.trim() : PERSONA_LAYER_TEXT[personaId];
+  const sendSignature = enableVoiceNotes ? 'send_message({ bubbles, voice_note, end_turn: true })' : 'send_message({ bubbles, end_turn: true })';
   return [
     '# nb-speak · DSH Mode A (chat-human + send_message)',
     '- When workspace inspection, file edits, or shell checks are needed (`read`, `glob`, `grep`, `edit`, `write`, `pwsh`, `todo_write`, etc.), invoke those workspace tools directly first without filler commentary.',
-    '- Deliver EVERY reply to the human user by calling `send_message({ bubbles, voice_note, end_turn: true })` instead of raw assistant Markdown prose (earlier assistant messages in history appear already unwrapped as paragraphs — still call `send_message` on every new user-facing reply).',
+    `- Deliver EVERY reply to the human user by calling \`${sendSignature}\` instead of raw assistant Markdown prose (earlier assistant messages in history appear already unwrapped as paragraphs — still call \`send_message\` on every new user-facing reply).`,
     '- Bubble physics: default to 1-2 short thumb-typed IM bubbles (max 4; 4-28 CJK chars or 4-22 English words per bubble). Omit trailing periods (`。` / `.`) on short single-clause lines. Never put `###` headers, bullet/numbered lists, Markdown tables, or code fences inside `bubbles`.',
     '- Offload shell commands, multi-line code, SQL queries, unified diffs, or comparison tables via `send_artifact({ title, kind, language, content })` PAIRED with `send_message` in the same final response (never call `send_artifact` alone without `send_message`). Keep `send_artifact` content tight and essential — only the clean runnable command/SQL/code the user asked for, never 30-line comment essays or unrequested appendices.',
     '- Ban RPG stage brackets (`*sighs*`, `（叹气）`, `(笑)`), decorative emojis/kaomoji unless invited, subordinate concierge clichés (`向你汇报`, `希望这能帮到你`, `如有需要请随时告诉我`, `Let me know if you need anything`), and unrequested risk lectures.',
@@ -152,8 +166,9 @@ function injectSkillSystemPrompt(
   messages                          ,
   personaId                                       ,
   customSoul         ,
+  enableVoiceNotes = false,
 )                  {
-  const block = buildSkillSystemLayer(personaId, customSoul);
+  const block = buildSkillSystemLayer(personaId, customSoul, enableVoiceNotes);
   const first = messages[0];
   if (
     first &&
@@ -185,7 +200,10 @@ function formatArtifactBlock(art                                                
   return `**\`${cleanTitle}\`**\n\`\`\`${lang}\n${art.content}\n\`\`\``;
 }
 
-function extractUserSpeakFromToolCalls(toolCalls                                       )                     {
+function extractUserSpeakFromToolCalls(
+  toolCalls                                       ,
+  enableVoiceNotes = false,
+)                     {
   const bubbles           = [];
   const artifacts                                                                             = [];
   let voiceNote                                                ;
@@ -202,7 +220,7 @@ function extractUserSpeakFromToolCalls(toolCalls                                
             const s = sanitizeBubbleLine(String(b ?? ''));
             if (s) bubbles.push(s);
           }
-          if (typeof parsed.voice_note === 'object' && parsed.voice_note !== null) {
+          if (enableVoiceNotes && typeof parsed.voice_note === 'object' && parsed.voice_note !== null) {
             const vn = parsed.voice_note                           ;
             const vnText = String(vn.text ?? '').trim();
             if (vnText) {
@@ -281,6 +299,7 @@ function normalizeRestoredStreamToolCalls(calls                                 
                                                                             
                                                    
                                                     
+                                               
                                  
  
 
@@ -417,11 +436,12 @@ export async function startDshOpenAiBridge(options
       let mappedMessages = remapMessagesToUpstream(rawMessages, remapTable);
 
       // Step 2: In Mode A (`skill`), inject `chat-human` system layer + `send_message` & `send_artifact` user tools
+      const voiceNotesEnabled = Boolean(state.getEnableVoiceNotes?.());
       let outgoingTools                                            =
         rawTools !== undefined ? remapTable.tools : undefined;
       if (conn.mode === 'skill') {
-        mappedMessages = injectSkillSystemPrompt(mappedMessages, personaId, state.getCustomSoul?.());
-        outgoingTools = [...remapTable.tools, ...SPEAK_USER_TOOLS];
+        mappedMessages = injectSkillSystemPrompt(mappedMessages, personaId, state.getCustomSoul?.(), voiceNotesEnabled);
+        outgoingTools = [...remapTable.tools, ...buildSpeakUserTools(voiceNotesEnabled)];
       }
 
       const stream = Boolean(reqBody.stream);
@@ -470,7 +490,7 @@ export async function startDshOpenAiBridge(options
             const rawCalls = Array.isArray(message.tool_calls) ? (message.tool_calls                    ) : undefined;
 
             if (conn.mode === 'skill' && rawCalls && rawCalls.length > 0) {
-              const extracted = extractUserSpeakFromToolCalls(rawCalls);
+              const extracted = extractUserSpeakFromToolCalls(rawCalls, voiceNotesEnabled);
               if (extracted.hasSpeak) {
                 message.content = [existingContent, extracted.renderedContent].filter(Boolean).join('\n\n');
                 speakMeta = {
@@ -635,7 +655,7 @@ export async function startDshOpenAiBridge(options
             type: 'function',
             function: { name: slot.name, arguments: slot.arguments },
           }));
-        const extracted = extractUserSpeakFromToolCalls(assembled);
+        const extracted = extractUserSpeakFromToolCalls(assembled, voiceNotesEnabled);
         const restoredPassthrough = normalizeRestoredStreamToolCalls(
           restoreOpenAIToolCalls(extracted.passthroughToolCalls, remapTable),
         );

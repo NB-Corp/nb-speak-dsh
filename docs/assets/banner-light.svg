@@ -9,9 +9,9 @@
   <rect x="358" y="51" width="126" height="26" rx="13" fill="#e5efe8"/>
   <text x="421" y="68" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700" fill="#20412f">DSH Plugin</text>
 
-  <text x="48" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="23.5" font-weight="700" fill="#284b37">Native IM bubbles &amp; voice notes for DeepSeek Harness.</text>
+  <text x="48" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="23.5" font-weight="700" fill="#284b37">Native IM bubbles &amp; copyable cards for DeepSeek Harness.</text>
   <text x="48" y="166" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#57524a">First-class send_bubble + send_artifact tools, exec.concludeTurn() zero-retry termination,</text>
-  <text x="48" y="191" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#57524a">22-bar ElevenLabs v4 / Web Speech voice pills, and copyable turnTail artifact cards.</text>
+  <text x="48" y="191" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15.5" fill="#57524a">copyable turnTail artifact cards, and optional 22-bar voice pills (off by default).</text>
   <text x="48" y="226" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" fill="#284b37">npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web</text>
 
   <!-- Right DSH turnTail Surface Preview -->
@@ -33,7 +33,7 @@
   <rect x="828" y="136" width="2.8" height="14" rx="1.4" fill="#284b37"/>
   <rect x="834" y="139" width="2.8" height="8" rx="1.4" fill="#7aa68b"/>
   <rect x="840" y="135" width="2.8" height="16" rx="1.4" fill="#7aa68b"/>
-  <text x="854" y="148" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#20412f">0:08 · eleven_v4</text>
+  <text x="854" y="148" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#20412f">0:08 · calm aside</text>
 
   <!-- Artifact Card Chip -->
   <rect x="768" y="168" width="374" height="56" rx="12" fill="#faf8f3" stroke="#d8d0c2" stroke-width="1"/>

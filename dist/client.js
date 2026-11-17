@@ -333,7 +333,7 @@ const nbSpeakTurnDefinition = {
                     : estimateClientVoiceSeconds(vn.text),
                 ...(audioSrc ? { audioSrc } : {}),
               }
-            : existing?.voiceNote;
+            : undefined;
         const nextMap = new Map(prev.bubbleMap);
         nextMap.set(callId, {
           callId,
@@ -573,7 +573,7 @@ function createNbSpeakClientPlugin(React     , cssText        ) {
         'data-nb-speak': 'voice-note',
         'data-emotion': voiceNote.emotion,
         'data-playing': playing ? 'true' : 'false',
-        'data-audio-mode': voiceNote.audioSrc ? 'elevenlabs-audio' : 'web-speech',
+        'data-audio-mode': voiceNote.audioSrc ? 'audio-clip' : 'web-speech',
       },
       voiceNote.audioSrc
         ? h('audio', {

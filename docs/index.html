@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>nb-speak-dsh — Native IM Bubbles &amp; Voice Notes for DeepSeek Harness</title>
-  <meta name="description" content="Zero-dependency DeepSeek Harness (DSH) native IM bubble plugin: send_bubble + exec.concludeTurn(), 22-bar ElevenLabs v4 / Web Speech voice pills, and copyable turnTail artifact cards. Install in one npx command.">
+  <meta name="description" content="Zero-dependency DeepSeek Harness (DSH) native IM bubble plugin: send_bubble + exec.concludeTurn(), copyable turnTail artifact cards, and optional voice capsules (off by default). Install in one npx command.">
   <link rel="canonical" href="https://nb-corp.github.io/nb-speak-dsh/">
   <link rel="alternate" hreflang="en" href="https://nb-corp.github.io/nb-speak-dsh/">
   <link rel="alternate" hreflang="zh-CN" href="https://nb-corp.github.io/nb-speak-dsh/zh/">
@@ -14,7 +14,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NB-Corp / nb-speak-dsh">
   <meta property="og:title" content="nb-speak-dsh — Native IM Bubbles &amp; Voice Notes for DeepSeek Harness">
-  <meta property="og:description" content="Replace single-blob Markdown essays in DSH with native turnTail bubbles, 22-bar ElevenLabs v4 voice pills, and copyable SQL/code cards—zero runtime deps, zero subagent collisions.">
+  <meta property="og:description" content="Replace single-blob Markdown essays in DSH with native turnTail bubbles, copyable SQL/code cards, and optional 22-bar voice pills (off by default)—zero runtime deps, zero subagent collisions.">
   <meta property="og:url" content="https://nb-corp.github.io/nb-speak-dsh/">
   <meta property="og:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
   <meta property="og:image:width" content="1200">
@@ -22,7 +22,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="nb-speak-dsh — Native IM Bubbles for DeepSeek Harness">
-  <meta name="twitter:description" content="One-command zero-clone DSH plugin: send_bubble + exec.concludeTurn(), 22-bar ElevenLabs v4 voice pills, and copyable artifact cards.">
+  <meta name="twitter:description" content="One-command zero-clone DSH plugin: send_bubble + exec.concludeTurn(), turnTail bubbles, copyable artifact cards, and optional voice pills.">
   <meta name="twitter:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
 
   <link rel="stylesheet" href="./assets/style.css">
@@ -35,7 +35,7 @@
         "@type": "SoftwareSourceCode",
         "name": "@nb-corp/nb-speak-dsh",
         "alternateName": ["nb-speak-dsh", "NB-Corp/nb-speak-dsh"],
-        "description": "Standalone zero-dependency DeepSeek Harness (DSH) Cordis plugin and WebUI client extension registering send_bubble (exec.concludeTurn()) and send_artifact tools with native conversation.chat.turnTail bubbles, 22-bar ElevenLabs v4 / Web Speech voice pills, and copyable artifact cards.",
+        "description": "Standalone zero-dependency DeepSeek Harness (DSH) Cordis plugin and WebUI client extension registering send_bubble (exec.concludeTurn()) and send_artifact tools with native conversation.chat.turnTail bubbles, copyable artifact cards, and optional 22-bar voice-note pills (disabled by default).",
         "codeRepository": "https://github.com/NB-Corp/nb-speak-dsh",
         "url": "https://nb-corp.github.io/nb-speak-dsh/",
         "programmingLanguage": ["TypeScript", "JavaScript"],
@@ -82,10 +82,10 @@
           },
           {
             "@type": "Question",
-            "name": "Does @nb-corp/nb-speak-dsh require an ElevenLabs API key to play voice notes?",
+            "name": "Are voice notes forced by default, and do they require a paid TTS API key?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. Without ELEVENLABS_API_KEY, VoiceNotePill plays immediately through the browser Web Speech API with full 22-bar waveform progress. Passing ELEVENLABS_API_KEY upgrades playback to ElevenLabs eleven_v4 audio while stripping base64 DataURIs from LLM context."
+              "text": "No. enableVoiceNotes defaults to false so users get pure text bubbles and copyable artifact cards out of the box. When opted in via --voice-notes or NB_SPEAK_VOICE_NOTES=true, VoiceNotePill supports any OpenAI-compatible /v1/audio/speech endpoint, a local JSON bridge script, cloud TTS APIs, or zero-key browser Web Speech."
             }
           }
         ]
@@ -127,7 +127,7 @@
               <span>@nb-corp/nb-speak-dsh · Zero Runtime Deps</span>
             </span>
             <h1 class="hero-title">Native bubbles for DeepSeek Harness.</h1>
-            <p class="hero-sub">Mount <code class="mono">send_bubble</code> + <code class="mono">send_artifact</code> directly into DSH <code class="mono">turnTail</code>—squircle beats, 22-bar ElevenLabs <code class="mono">eleven_v4</code> voice pills, and copyable cards.</p>
+            <p class="hero-sub">Mount <code class="mono">send_bubble</code> + <code class="mono">send_artifact</code> directly into DSH <code class="mono">turnTail</code>—squircle beats, copyable cards, and optional voice pills (off by default).</p>
           </div>
 
           <div class="scenario-bar" id="scenario-tabs" role="tablist" aria-label="DSH live scenarios"></div>
@@ -231,8 +231,8 @@
               <div class="field-group">
                 <label class="field-label" for="cli-tts">Voice Note Engine</label>
                 <select class="soft-select" id="cli-tts">
-                  <option value="elevenlabs">ElevenLabs eleven_v4 (&lt;audio&gt;)</option>
-                  <option value="webspeech">Zero-Key Web Speech Fallback</option>
+                  <option value="off">Off (Default · Text Bubbles Only)</option>
+                  <option value="optin">Enable Voice Notes (OpenAI-compatible / Custom TTS / Web Speech)</option>
                 </select>
               </div>
             </div>
@@ -310,7 +310,7 @@
 
     <footer class="site-foot">
       <div>
-        <strong>@nb-corp/nb-speak-dsh</strong> · MIT License © 2026 NB-Corp. Demo voice clips synthesized via ElevenLabs (<code class="mono">eleven_v4</code>) official premade voices (<a href="./assets/audio/NOTICE.txt" style="text-decoration:underline;">AI Audio Notice</a>).
+        <strong>@nb-corp/nb-speak-dsh</strong> · MIT License © 2026 NB-Corp. Static voice clips are AI-synthesized for demo playback only (<a href="./assets/audio/NOTICE.txt" style="text-decoration:underline;">AI Demo Audio Notice</a>).
       </div>
       <div class="foot-links">
         <a href="https://github.com/NB-Corp/nb-speak-dsh">GitHub</a>

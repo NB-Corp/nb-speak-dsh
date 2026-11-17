@@ -1,7 +1,7 @@
 {
   "name": "@nb-corp/nb-speak-dsh",
   "version": "0.3.1",
-  "description": "Zero-dependency DeepSeek Harness (DSH) native IM bubble plugin & WebUI extension: send_bubble (exec.concludeTurn()) + send_artifact tools, tactile squircle bubbles, 22-bar ElevenLabs v4 / Web Speech voice-note pills, and one-click copyable artifact cards.",
+  "description": "Zero-dependency DeepSeek Harness (DSH) native IM bubble plugin & WebUI extension: send_bubble (exec.concludeTurn()) + send_artifact tools, tactile squircle bubbles, copyable artifact cards, and optional 22-bar voice-note pills (disabled by default).",
   "icon": "./icon.svg",
   "license": "MIT",
   "author": "Nai Long 7th <nailong@xter.org>",
@@ -23,7 +23,6 @@
     "chat-ui",
     "instant-messaging",
     "voice-notes",
-    "elevenlabs",
     "tts",
     "tool-calling",
     "typescript",

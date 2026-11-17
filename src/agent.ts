@@ -1,4 +1,5 @@
 import {
+  parseEnvBoolean,
   registerSpeakToolsAndPrompt,
   type DshSystemPromptServiceLike,
   type DshToolsServiceLike,
@@ -9,6 +10,7 @@ import type { StyleSliderConfig } from './weights.ts';
 export interface NbSpeakHostServiceLike {
   getSliderConfig(): StyleSliderConfig;
   getCustomSoul(): string;
+  isVoiceNotesEnabled?(): boolean;
   readonly synthesizeVoiceNote?: VoiceNoteSynthesizer;
 }
 
@@ -32,6 +34,10 @@ export function apply(ctx: AgentContextLike): void {
     registerSpeakToolsAndPrompt(ctx.tools, ctx.systemPrompt, {
       getSliderConfig: () => ctx.nbSpeak?.getSliderConfig() ?? { preset: 'neutral_peer' },
       getCustomSoul: () => ctx.nbSpeak?.getCustomSoul() ?? '',
+      enableVoiceNotes: () =>
+        ctx.nbSpeak?.isVoiceNotesEnabled
+          ? ctx.nbSpeak.isVoiceNotesEnabled()
+          : parseEnvBoolean(process.env.NB_SPEAK_VOICE_NOTES),
       synthesizeVoiceNote: (input) =>
         ctx.nbSpeak?.synthesizeVoiceNote
           ? ctx.nbSpeak.synthesizeVoiceNote(input)

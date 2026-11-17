@@ -5,13 +5,13 @@
   <img src="docs/assets/banner-light.svg" alt="nb-speak-dsh — Native IM bubbles & voice notes for DeepSeek Harness." width="1200">
 </picture>
 
-**Standalone, zero-dependency DeepSeek Harness (`DSH`) Cordis plugin & WebUI client extension: native `send_bubble` (`exec.concludeTurn()`) + `send_artifact` tools, tactile squircle chat bubbles, 22-bar ElevenLabs `eleven_v4` / Web Speech voice-note pills, and copyable artifact cards.**
+**Standalone, zero-dependency DeepSeek Harness (`DSH`) Cordis plugin & WebUI client extension: native `send_bubble` (`exec.concludeTurn()`) + `send_artifact` tools, tactile squircle chat bubbles, copyable artifact cards, and optional 22-bar voice-note pills (disabled by default).**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/NB-Corp/nb-speak-dsh/ci.yml?branch=main&style=flat-square&color=284b37)](https://github.com/NB-Corp/nb-speak-dsh/actions/workflows/ci.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-22.19%2B-284b37?style=flat-square)](https://nodejs.org/)
 [![Dependencies](https://img.shields.io/badge/runtime%20deps-0-284b37?style=flat-square)](package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-284b37?style=flat-square)](LICENSE)
-[![Live Showcase](https://img.shields.io/badge/showcase-live%20turnTail%20%2B%20ElevenLabs%20v4-284b37?style=flat-square)](https://nb-corp.github.io/nb-speak-dsh/)
+[![Live Showcase](https://img.shields.io/badge/showcase-live%20turnTail%20UI-284b37?style=flat-square)](https://nb-corp.github.io/nb-speak-dsh/)
 
 [**Interactive WebUI Showcase & Voice Demo**](https://nb-corp.github.io/nb-speak-dsh/) · [15s Zero-Clone Install](#15-second-zero-clone-install) · [Architecture](#why-native-turn-conclusion-matters-in-dsh) · [4 Live DSH Duels](#same-model-different-delivery-4-live-dsh-duels) · [Speaking Trio](#the-nb-corp-speaking-trio) · [llms.txt](llms.txt)
 
@@ -23,12 +23,12 @@ Vanilla DeepSeek Harness (`DSH`) renders every assistant turn as a single `assis
 
 <p align="center">
   <a href="https://nb-corp.github.io/nb-speak-dsh/">
-    <img src="docs/assets/dsh-hero-showcase.png" alt="Vanilla DeepSeek Harness (:19081) vs @nb-corp/nb-speak-dsh (:19082) on cmd/deepseek-v4.1-flash: Casual Friday off-work chat and 4.2M-row Postgres SQL triage with native IM bubbles, playable 22-bar ElevenLabs v4 voice notes, and copyable SQL cards" width="1160">
+    <img src="docs/assets/dsh-hero-showcase.png" alt="Vanilla DeepSeek Harness (:19081) vs @nb-corp/nb-speak-dsh (:19082) on cmd/deepseek-v4.1-flash: Casual Friday off-work chat and 4.2M-row Postgres SQL triage with native IM bubbles, copyable SQL cards, and optional voice-note pills" width="1160">
   </a>
 </p>
 
 <p align="center">
-  <strong><a href="https://nb-corp.github.io/nb-speak-dsh/">Try the Interactive DSH <code>turnTail</code> Stage, Play ElevenLabs <code>eleven_v4</code> Voice Notes &amp; Inspect Full-Res Captures → nb-corp.github.io/nb-speak-dsh</a></strong>
+  <strong><a href="https://nb-corp.github.io/nb-speak-dsh/">Try the Interactive DSH <code>turnTail</code> Stage, Inspect Copyable Artifact Cards &amp; Optional Voice Demos → nb-corp.github.io/nb-speak-dsh</a></strong>
 </p>
 
 ## 15-Second Zero-Clone Install
@@ -39,12 +39,15 @@ Prebuilt ESM and WebUI artifacts (`dist/`) ship in the repository with **zero ru
 # 1. Preview planned profile changes (zero filesystem writes)
 npx --yes github:NB-Corp/nb-speak-dsh --dry-run --profile web
 
-# 2. Mount into ~/.dsh/profiles/web (supports: web, desktop, acp, headless, sdk)
+# 2. Mount into ~/.dsh/profiles/web (text bubbles & artifact cards only by default)
 npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web
 
-# 3. Launch DSH WebUI (optional: pass ELEVENLABS_API_KEY for real eleven_v4 voice notes;
-#    unconfigured setups play seamlessly via browser Web Speech with zero errors)
-ELEVENLABS_API_KEY="xi-..." dsh web
+# 3. Launch DSH WebUI (default: pure text bubbles + copyable cards)
+dsh web
+
+#    Optional: opt in to voice_note capsules (--voice-notes or NB_SPEAK_VOICE_NOTES=true)
+#    using any OpenAI-compatible /v1/audio/speech server, local bridge, or Web Speech
+NB_SPEAK_VOICE_NOTES=true NB_SPEAK_TTS_BASE_URL="http://127.0.0.1:8000/v1" dsh web
 
 # 4. Byte-for-byte reversible uninstall
 npx --yes github:NB-Corp/nb-speak-dsh --uninstall --profile web
@@ -76,26 +79,29 @@ dsh plugin --profile web add ./nb-corp-nb-speak-dsh-0.3.1.tgz
 | **Subagent `send_message` collision**<br>DSH's `@deepseek-ai/dsh-tool-subagent-control` already owns `send_message({ agent_id, message })` for parent-to-child agent delegation. | **Zero collision.** Native mode registers `send_bubble` and `send_artifact` on DSH's `tools` service (`src/dsh-tools.ts`) and injects `nb-speak:protocol` at order `9200`—leaving subagent `send_message` untouched. Optional HTTP bridge modes (`skill` / `voice-model`) bidirectionally remap `send_message <-> agent_send_message`. |
 | **`EMPTY_RESPONSE` 5x retry loop**<br>If a model calls an ordinary tool and then emits empty `assistant.content` (`""`) to avoid duplicating bubble text as Markdown prose, DSH treats the empty follow-up step as `EMPTY_RESPONSE` and retries up to 5 times. | **`exec.concludeTurn()` in one step.** `send_bubble.execute(args, exec)` invokes `exec.concludeTurn()` directly when `end_turn !== false` (`src/dsh-tools.ts`), terminating the turn inside the tool step itself with **zero extra LLM round-trips**, **zero `EMPTY_RESPONSE` retries**, and **zero duplicate prose**. |
 | **Collapsed tool-step accordions**<br>Ordinary tool outputs get buried inside DSH's collapsed tool-execution rows. | **`conversation.chat.turnTail` WebUI surface.** `dist/client.js` reduces `tool/call` + `tool/result` events (`nbSpeakTurnDefinition`) and mounts `SpeakTurnTail` at `order: -10` directly in the chat stream: squircle bubbles, 22-bar FNV-1a waveform `VoiceNotePill` players, and syntax-badged `ArtifactCardView` cards (GFM pipe tables, `+/-` diff coloring, `>22`-line expand/collapse, one-click copy). |
-| **Audio base64 context bloat**<br>Returning synthesized MP3 DataURIs in tool text bloats subsequent LLM turns by tens of thousands of tokens. | **Zero-token `presentationMeta` split.** `send_bubble.output.render()` strips `audioSrc` so the LLM context receives a 70-byte JSON receipt, while `presentationMeta()` streams the ElevenLabs `eleven_v4` DataURI straight to `VoiceNotePill` `<audio>`. |
+| **Audio base64 context bloat**<br>Returning synthesized MP3 DataURIs in tool text bloats subsequent LLM turns by tens of thousands of tokens. | **Zero-token `presentationMeta` split.** When voice notes are enabled, `send_bubble.output.render()` strips `audioSrc` so the LLM context receives a 70-byte JSON receipt, while `presentationMeta()` streams the synthesized audio DataURI straight to `VoiceNotePill` `<audio>`. |
 
-## Voice Notes: ElevenLabs `eleven_v4` + Zero-Config Fallback
+## Optional Voice Notes (Off by Default · Provider-Agnostic)
+
+By default, **`enableVoiceNotes` is `false`**—the model sends pure text bubbles and `send_artifact` cards with zero `voice_note` schema fields or TTS calls. Users who want spoken capsules can opt in via `--voice-notes`, DSH Settings (`enableVoiceNotes: true`), or `NB_SPEAK_VOICE_NOTES=true`:
 
 | Environment / Config | Playback Engine | LLM Context Cost |
 | --- | --- | --- |
-| **Default (no TTS key)** | Instant `0ms` tool completion; `VoiceNotePill` plays via browser **Web Speech API** with animated 22-bar progress (`data-audio-mode="web-speech"`). | `0` extra tokens |
-| **`ELEVENLABS_API_KEY` set** *(or DSH credential ref `ttsApiKeyRef`)* | Synthesizes `eleven_v4` (`mp3_44100_128`); auto-picks `Jessica` (`warm`/`playful`/`relieved`) or `Julia` (`calm`/`dry`/`serious`) unless overridden by `NB_SPEAK_TTS_VOICE`, and anchors Mandarin turns with `language_code: "zh"` + `[Standard Mandarin accent]`. | **`0` extra tokens** |
-| **`NB_SPEAK_TTS_BRIDGE` set** *(or `ttsBridgeScript`)* | Invokes a local JSON TTS bridge (`{ action: "submit", input, output, resultFile }`) for custom `-16 LUFS` mastering or multi-key pools. | **`0` extra tokens** |
+| **Default (`enableVoiceNotes: false`)** | Text bubbles + copyable `send_artifact` cards only (`voice_note` omitted from tool schema & prompt). | `0` extra tokens |
+| **OpenAI-compatible `/v1/audio/speech`** (`NB_SPEAK_VOICE_NOTES=true` + `NB_SPEAK_TTS_BASE_URL`) | Calls any OpenAI-compatible speech endpoint (OpenAI, Qwen TTS, Fish, Kokoro, vLLM) with `NB_SPEAK_TTS_API_KEY`, `NB_SPEAK_TTS_MODEL`, and `NB_SPEAK_TTS_VOICE`. | **`0` extra tokens** |
+| **Local JSON Bridge** (`NB_SPEAK_VOICE_NOTES=true` + `NB_SPEAK_TTS_BRIDGE`) | Invokes a local JSON TTS bridge (`{ action: "submit", input, output, resultFile }`) for custom `-16 LUFS` mastering or local engines. | **`0` extra tokens** |
+| **Cloud TTS / Web Speech Fallback** (`NB_SPEAK_VOICE_NOTES=true`) | Supports optional cloud speech providers (`NB_SPEAK_TTS_PROVIDER=elevenlabs` with `ELEVENLABS_API_KEY`, etc.), or falls back automatically to zero-key browser **Web Speech API** (`data-audio-mode="web-speech"`) when no endpoint/key is set. | **`0` extra tokens** |
 
 ## Same Model, Different Delivery: 4 Live DSH Duels
 
-Captured live on isolated DSH instances running **`cmd/deepseek-v4.1-flash`** (`:19081` Vanilla vs `:19082` `@nb-corp/nb-speak-dsh` Native Mode + ElevenLabs `eleven_v4`, zero mocks):
+Captured live on isolated DSH instances running **`cmd/deepseek-v4.1-flash`** (`:19081` Vanilla vs `:19082` `@nb-corp/nb-speak-dsh` Native Mode with optional voice notes enabled, zero mocks):
 
 | Live Scenario | Vanilla DSH (`:19081` · `assistant.content`) | With `@nb-corp/nb-speak-dsh` (`:19082` · `turnTail`) |
 | --- | --- | --- |
-| **1. Casual Friday Convenience Store** | 4-item bolded nutrition matrix + taste-bud physiology lecture + concierge sign-off. | **3 relaxed friend bubbles** + **4.5s `Jessica` voice note** (*"Go straight for the hot counter..."*). **Zero code cards.** |
-| **2. 4.2M-Row Postgres SQL Triage** | Multi-section `###` headings + numbered checklist + inline SQL fences overflowing chat width. | **3 crisp SRE beats** + **8s calm voice aside** + collapsible, copyable **`orders-pagination-fix.sql`** card. |
-| **3. Multi-File Kanban SLA Bugfix** | `13/13` tests pass, followed by a multi-screen file-by-file changelog essay after editing 9 files. | **`17/17` tests pass**, delivered in **4 crisp bubbles** + warm voice note + **`board.css`** card. |
-| **4. Persona Under Concurrency Load** | Stays in character on Turn 1, then collapses on Turn 2 into a 10-paragraph mutex postmortem lecture. | **100% character & engineering fidelity**: playful short beats + dry voice note + 32-thread verified **`ttl_lru.py`** card. |
+| **1. Casual Friday Convenience Store** | 4-item bolded nutrition matrix + taste-bud physiology lecture + concierge sign-off. | **3 relaxed friend bubbles** + **optional 4.5s warm voice note** (*"Go straight for the hot counter..."*). **Zero code cards.** |
+| **2. 4.2M-Row Postgres SQL Triage** | Multi-section `###` headings + numbered checklist + inline SQL fences overflowing chat width. | **3 crisp SRE beats** + **optional 8s calm voice aside** + collapsible, copyable **`orders-pagination-fix.sql`** card. |
+| **3. Multi-File Kanban SLA Bugfix** | `13/13` tests pass, followed by a multi-screen file-by-file changelog essay after editing 9 files. | **`17/17` tests pass**, delivered in **4 crisp bubbles** + optional warm voice note + **`board.css`** card. |
+| **4. Persona Under Concurrency Load** | Stays in character on Turn 1, then collapses on Turn 2 into a 10-paragraph mutex postmortem lecture. | **100% character & engineering fidelity**: playful short beats + optional dry voice note + 32-thread verified **`ttl_lru.py`** card. |
 
 <details>
 <summary><strong>Inspect full side-by-side DSH captures (Casual Friday, Kanban 17/17 &amp; Persona Concurrency)</strong></summary>
@@ -103,7 +109,7 @@ Captured live on isolated DSH instances running **`cmd/deepseek-v4.1-flash`** (`
 <br>
 
 <p align="center">
-  <img src="docs/assets/dsh-compare-casual.png" alt="Casual Friday off-work chat on DSH: Vanilla 4-bullet lecture vs nb-speak-dsh 3 friend bubbles + playable ElevenLabs voice note" width="1100">
+  <img src="docs/assets/dsh-compare-casual.png" alt="Casual Friday off-work chat on DSH: Vanilla 4-bullet lecture vs nb-speak-dsh 3 friend bubbles + optional playable voice note" width="1100">
 </p>
 
 <p align="center">
@@ -139,7 +145,7 @@ Choose the exact package for your runtime—or combine all three:
 | **[`NB-Corp/nb-speak`](https://github.com/NB-Corp/nb-speak)** | **Universal Protocol SDK, OpenAI/SSE Bridge & `bubble_lint`** (OpenAI, DeepSeek, Claude, Gemini, `nb-im`, `OpenWebUI`, local 4B sidecars) | `npx --yes github:NB-Corp/nb-speak serve --port 18090` |
 | **[`NB-Corp/chat-human`](https://github.com/NB-Corp/chat-human)** | **Standalone 2-Layer Agent Skill** (Codex, Claude Code, Kiki, Cursor; includes Python stdlib `bubble_lint.py` & `proactive_gate.py`) | `npx skills add NB-Corp/chat-human` |
 
-Part of the **NB-Corp** agent stack alongside [`nb-search`](https://github.com/NB-Corp/nb-search) ([`nb-search-dsh`](https://github.com/NB-Corp/nb-search-dsh)), [`nb-extract`](https://github.com/NB-Corp/nb-extract), [`nb-hub`](https://github.com/NB-Corp/nb-hub), and [`nb-im`](https://github.com/NB-Corp/nb-im).
+Part of the **NB-Corp** agent stack alongside [`nb-search`](https://github.com/NB-Corp/nb-search) ([`nb-search-dsh`](https://github.com/NB-Corp/nb-search-dsh)), [`nb-extract`](https://github.com/NB-Corp/nb-extract), and [`nb-im`](https://github.com/NB-Corp/nb-im).
 
 ## Verification
 
@@ -149,4 +155,4 @@ npm test
 
 ## License
 
-[MIT](LICENSE) © 2026 NB-Corp. Static `.mp3` showcase clips in [`docs/assets/audio/`](docs/assets/audio/NOTICE.txt) are AI-synthesized via ElevenLabs (`eleven_v4`) using official premade platform voices (`Jessica`, `Sarah`, `Julia`, `ZiYue`, `ShanShan`) with zero real-person voice cloning; see `NOTICE.txt` for upstream speech-model restrictions.
+[MIT](LICENSE) © 2026 NB-Corp. Static `.mp3` showcase clips in [`docs/assets/audio/`](docs/assets/audio/NOTICE.txt) are AI-synthesized speech included solely to demonstrate optional voice-note playback with zero real-person voice cloning; see [AI Demo Audio Notice](docs/assets/audio/NOTICE.txt) for upstream speech-model attribution and terms.

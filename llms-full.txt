@@ -19,7 +19,7 @@
 - **Single-Step Turn Termination via `exec.concludeTurn()`**: When `end_turn !== false` (default), `send_bubble.execute(args, exec)` invokes `exec.concludeTurn()`, ending the DSH turn immediately inside the tool-execution step—**0 extra LLM calls, 0 `EMPTY_RESPONSE` retries, 0 duplicate prose**.
 - **First-Class `conversation.chat.turnTail` WebUI Surface (`dist/client.js`)**: Registers a turn-level event reducer (`nbSpeakTurnDefinition` on `uiConversation.events`) and mounts `SpeakTurnTail` into `conversation.chat.turnTail` (`order: -10`) outside collapsed step accordions:
   - Tactile squircle chat bubbles (`nb-speak-bubble`) with stagger rise motion (`prefers-reduced-motion` safe) and optional `reply_to` quote bars;
-  - Deterministic 22-bar FNV-1a waveform `VoiceNotePill` (`<audio>` ElevenLabs `eleven_v4` playback when configured, or zero-config browser Web Speech fallback);
+  - Deterministic 22-bar FNV-1a waveform `VoiceNotePill` when `enableVoiceNotes: true` (provider-agnostic `<audio>` playback via OpenAI-compatible `/v1/audio/speech`, local JSON bridge, or cloud TTS, plus zero-key browser Web Speech fallback);
   - Interactive `ArtifactCardView` blocks supporting syntax badges, GFM pipe-table to HTML `<table>` rendering, unified `+/-` diff line highlighting, `>22`-line expand/collapse, and one-click clipboard copy.
 - **Zero-Token `presentationMeta` Audio Split (`src/dsh-tools.ts` + `src/tts.ts`)**: `send_bubble.output.render()` strips `audioSrc` so the LLM context only sees `{ delivered, bubbleCount, hasVoiceNote, status }`, while `presentationMeta()` delivers the full `data:audio/mpeg;base64,...` payload exclusively to the WebUI client.
 - **Zero-Clone `npx`-Safe Reversible Installer (`scripts/install-dsh.mjs`)**: Persists the self-contained ~188 KB runtime bundle under `<DSH_HOME>/plugins/nb-speak-dsh` so ephemeral `_npx` cache cleanup never breaks DSH, snapshots profile files to `<DSH_HOME>/.nb-speak-backup/<profile>.json`, restores byte-for-byte on `--uninstall`, and **never reads, modifies, or deletes `.credentials.yaml`**.
@@ -40,10 +40,13 @@ npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web
 # 3. Optional: select a persona preset at install time (neutral_peer | sharp_lead | warm_companion | calm_sre)
 npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web --preset calm_sre
 
-# 4. Launch DSH WebUI with optional ElevenLabs eleven_v4 real voice notes
-ELEVENLABS_API_KEY="xi-..." dsh web
+# 4. Launch DSH WebUI (text bubbles & artifact cards only by default)
+dsh web
 
-# 5. Byte-for-byte reversible uninstall
+# 5. Optional: opt in to voice_note capsules with any OpenAI-compatible /v1/audio/speech endpoint
+NB_SPEAK_VOICE_NOTES=true NB_SPEAK_TTS_BASE_URL="http://127.0.0.1:8000/v1" dsh web
+
+# 6. Byte-for-byte reversible uninstall
 npx --yes github:NB-Corp/nb-speak-dsh --uninstall --profile web
 ```
 
@@ -79,6 +82,7 @@ DSH enforces a strict JSON Schema subset (`type`, `oneOf`, `properties`, `requir
         "type": "object",
         "additionalProperties": false,
         "required": ["text"],
+        "description": "Present only when enableVoiceNotes is true (disabled by default).",
         "properties": {
           "text": { "type": "string" },
           "emotion": {
@@ -131,7 +135,7 @@ All four benchmarks below ran live on isolated DSH instances with identical **`c
 | **Trailing empty-turn `EMPTY_RESPONSE` retries** | Up to `5` wasted retries if prose omitted | **`0` retries** (`exec.concludeTurn()` inside `send_bubble`) |
 | **Subagent `send_message` compatibility** | Collides if user bubble tool reuses `send_message` | **100% compatible** (`send_bubble` + `send_artifact`; bridge remap `agent_send_message`) |
 | **Audio context token overhead** | N/A or tens of thousands of base64 tokens | **`0` extra LLM tokens** (`render()` strips `audioSrc`; `presentationMeta` feeds `<audio>`) |
-| **Duel 1: Casual Friday convenience store** | 4-bullet meal matrix + physiology lecture | 3 friend bubbles + 4.5s `Jessica` `eleven_v4` voice note (`0` code cards) |
+| **Duel 1: Casual Friday convenience store** | 4-bullet meal matrix + physiology lecture | 3 friend bubbles + optional 4.5s warm voice note (`0` code cards) |
 | **Duel 2: 4.2M-row Postgres slow pagination** | Multi-heading essay + inline SQL overflow | 3 crisp SRE beats + 8s `Julia` voice aside + copyable `orders-pagination-fix.sql` card |
 | **Duel 3: Multi-file Kanban SLA timer bugfix** | `13/13` tests + 9-file changelog wall | **`17/17` tests green** + 4 bubbles + warm voice note + `board.css` card |
 | **Duel 4: Persona + deadlocked Python TTL LRU** | Persona collapses into 10-paragraph mutex lecture | **100% character retention** + 32-thread stress-tested `ttl_lru.py` card |
@@ -156,8 +160,8 @@ No. `scripts/install-dsh.mjs` automatically persists a clean, self-contained cop
 ### Q2: Does the installer read or modify `~/.dsh/.credentials.yaml`?
 Never. `install-dsh.mjs` snapshots only `profiles/<profile>/package.json`, `profiles/<profile>/cordis.patch.yml`, and `.agent-presets/nb-speak/*` into `<DSH_HOME>/.nb-speak-backup/<profile>.json`. At runtime, API keys are resolved strictly in memory via DSH's official `ctx.credentials.resolve()` service or process environment variables.
 
-### Q3: What happens if a user does not have an `ELEVENLABS_API_KEY`?
-`send_bubble` completes in `0ms` without network calls, and `VoiceNotePill` plays the voice note via the browser's built-in Web Speech API (`data-audio-mode="web-speech"`) with full 22-bar waveform progress animation and zero error messages.
+### Q3: Are voice notes forced by default, and do they require a paid TTS API key?
+No. `enableVoiceNotes` defaults to `false`, so `@nb-corp/nb-speak-dsh` delivers pure text bubbles and copyable artifact cards with zero `voice_note` prompting or TTS calls. When users explicitly opt in via `--voice-notes` or `NB_SPEAK_VOICE_NOTES=true`, `src/tts.ts` supports any OpenAI-compatible `/v1/audio/speech` server (`NB_SPEAK_TTS_BASE_URL`), a local JSON bridge (`NB_SPEAK_TTS_BRIDGE`), cloud TTS providers, or zero-key browser Web Speech fallback (`data-audio-mode="web-speech"`).
 
-### Q4: How does Mandarin Chinese prosody stay natural on English ElevenLabs voices like `Jessica`?
-When `src/tts.ts` detects CJK characters on an English premade voice (`Jessica`, `Sarah`, `Julia`) under `eleven_v4`, `prepareElevenLabsMandarinText()` automatically passes `language_code: "zh"` and prepends `[Standard Mandarin accent]` while normalizing terminal punctuation, preventing Cantonese or foreign-accent prosody drift.
+### Q4: How does Mandarin Chinese prosody stay natural when optional TTS is enabled?
+OpenAI-compatible `/v1/audio/speech` servers (Qwen TTS, Kokoro, Fish, OpenAI) and local bridges handle Mandarin natively, while `src/tts.ts` also normalizes Mandarin punctuation and passes explicit Chinese language hints when cloud TTS voices need Mandarin prosody anchoring.

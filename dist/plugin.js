@@ -3,11 +3,18 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { startDshOpenAiBridge,                          } from './http-bridge.js';
 import {
+  parseEnvBoolean,
   registerSpeakToolsAndPrompt,
                                   
                            
 } from './dsh-tools.js';
-import { createVoiceNoteSynthesizer } from './tts.js';
+import {
+  createVoiceNoteSynthesizer,
+  DEFAULT_TTS_KEY_REFS,
+  TTS_PROVIDER_IDS,
+                     
+                            
+} from './tts.js';
                                                                            
 import {
   resolveUpstreamModelSpec,
@@ -57,6 +64,9 @@ export const inject = {
                                                             
                                                             
                                                     
+                                                     
+                                                             
+                                                                    
                                                      
                                                        
                                                    
@@ -127,17 +137,32 @@ async function buildSchemaIfAvailable()                   {
     defaultVoiceModel: z.string().default('nb-speak-voice-v1').description('Bridge Mode B base model prefix').volatile(),
     apiKeyRef: z.string().default('NB_SPEAK_API_KEY').description('Bridge upstream credential env/store key').volatile(),
     customSoul: z.string().default('').description('Optional custom SOUL.md / persona prompt override').volatile(),
+    enableVoiceNotes: z
+      .boolean()
+      .default(false)
+      .description('Enable optional complementary voice-note capsule on the final bubble (default: false — text bubbles & artifact cards only)')
+      .volatile(),
+    ttsProvider: z
+      .union(TTS_PROVIDER_IDS)
+      .default('auto')
+      .description('Optional TTS provider when enableVoiceNotes is true (auto | openai | bridge | webspeech | custom)')
+      .volatile(),
+    ttsBaseUrl: z
+      .string()
+      .default('')
+      .description('Optional OpenAI-compatible /v1/audio/speech base URL when enableVoiceNotes is true (or NB_SPEAK_TTS_BASE_URL)')
+      .volatile(),
     ttsApiKeyRef: z
       .string()
-      .default('ELEVENLABS_API_KEY')
-      .description('Optional ElevenLabs API credential ref/env for real voice_note audio; falls back to Web Speech when unset')
+      .default('NB_SPEAK_TTS_API_KEY')
+      .description('Optional TTS API credential ref/env when enableVoiceNotes is true (falls back to Web Speech when unset)')
       .volatile(),
     ttsVoice: z
       .string()
       .default('auto')
-      .description('Optional ElevenLabs voice alias or ID (auto, Jessica, ZiYue, ShanShan, Julia, Sarah)')
+      .description('Optional TTS voice alias or ID when enableVoiceNotes is true')
       .volatile(),
-    ttsModel: z.string().default('eleven_v4').description('Optional ElevenLabs TTS model ID').volatile(),
+    ttsModel: z.string().default('auto').description('Optional TTS model ID (or NB_SPEAK_TTS_MODEL)').volatile(),
     ttsBridgeScript: z
       .string()
       .default('')
@@ -223,16 +248,19 @@ export async function apply(
     };
   };
 
+  const isVoiceNotesEnabled = ()          =>
+    readVal(config.enableVoiceNotes, parseEnvBoolean(env.NB_SPEAK_VOICE_NOTES));
+
   const synthesizeVoiceNote = createVoiceNoteSynthesizer({
+    getProvider: () => readVal(config.ttsProvider, (env.NB_SPEAK_TTS_PROVIDER                             ) ?? 'auto'),
+    getBaseUrl: () => readVal(config.ttsBaseUrl, env.NB_SPEAK_TTS_BASE_URL ?? ''),
     getBridgeScript: () => readVal(config.ttsBridgeScript, env.NB_SPEAK_TTS_BRIDGE ?? ''),
     getVoice: () => readVal(config.ttsVoice, env.NB_SPEAK_TTS_VOICE ?? 'auto'),
-    getModel: () => readVal(config.ttsModel, env.NB_SPEAK_TTS_MODEL ?? 'eleven_v4'),
+    getModel: () => readVal(config.ttsModel, env.NB_SPEAK_TTS_MODEL ?? 'auto'),
     getApiKey: () =>
       resolveCredentialValue(ctx.credentials, env, [
-        readVal(config.ttsApiKeyRef, 'ELEVENLABS_API_KEY'),
-        'ELEVENLABS_API_KEY',
-        'ELEVEN_API_KEY',
-        'XI_API_KEY',
+        readVal(config.ttsApiKeyRef, 'NB_SPEAK_TTS_API_KEY'),
+        ...DEFAULT_TTS_KEY_REFS,
       ]),
     env,
     fetchImpl: overrides.fetchImpl,
@@ -245,6 +273,7 @@ export async function apply(
       getSliderConfig,
       getCustomSoul,
       synthesizeVoiceNote,
+      enableVoiceNotes: isVoiceNotesEnabled,
     });
   }
 
@@ -260,6 +289,7 @@ export async function apply(
         getUpstreamConnection,
         getBubbleJoinMode: () => readVal(config.bubbleJoinMode, 'paragraph'),
         getCustomSoul,
+        getEnableVoiceNotes: isVoiceNotesEnabled,
         fetchImpl: overrides.fetchImpl,
       },
     });
@@ -269,6 +299,7 @@ export async function apply(
     ...(bridgeServer ? { bridgeBaseUrl: bridgeServer.baseUrl, bridgePort: bridgeServer.port } : {}),
     getSliderConfig,
     getCustomSoul,
+    isVoiceNotesEnabled,
     synthesizeVoiceNote,
     currentSpec: () =>
       resolveUpstreamModelSpec(

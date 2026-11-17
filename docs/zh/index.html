@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>nb-speak-dsh — DeepSeek Harness 原生真气泡与贴麦语音插件</title>
-  <meta name="description" content="独立零依赖的 DeepSeek Harness (DSH) 原生真气泡插件：一等公民 send_bubble + exec.concludeTurn()、22 柱 ElevenLabs v4 / Web Speech 波形语音胶囊与可复制代码卡片，一行 npx 零克隆挂载。">
+  <meta name="description" content="独立零依赖的 DeepSeek Harness (DSH) 原生真气泡插件：一等公民 send_bubble + exec.concludeTurn()、可复制代码卡片与可选 22 柱波形语音胶囊（默认关闭），一行 npx 零克隆挂载。">
   <link rel="canonical" href="https://nb-corp.github.io/nb-speak-dsh/zh/">
   <link rel="alternate" hreflang="en" href="https://nb-corp.github.io/nb-speak-dsh/">
   <link rel="alternate" hreflang="zh-CN" href="https://nb-corp.github.io/nb-speak-dsh/zh/">
@@ -14,7 +14,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NB-Corp / nb-speak-dsh">
   <meta property="og:title" content="nb-speak-dsh — 为 DeepSeek Harness 注入真气泡与贴麦语音">
-  <meta property="og:description" content="告别单块 Markdown 论文墙：原生 turnTail 短气泡、22 柱 ElevenLabs v4 贴麦语音胶囊与一键复制 SQL/代码卡，零依赖一行命令安装。">
+  <meta property="og:description" content="告别单块 Markdown 论文墙：原生 turnTail 短气泡、一键复制 SQL/代码卡与可选语音胶囊（默认关闭），零依赖一行命令安装。">
   <meta property="og:url" content="https://nb-corp.github.io/nb-speak-dsh/zh/">
   <meta property="og:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
   <meta property="og:image:width" content="1200">
@@ -22,7 +22,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="nb-speak-dsh — DeepSeek Harness 原生真气泡插件">
-  <meta name="twitter:description" content="一行 npx 零克隆挂载：send_bubble + exec.concludeTurn() 零重试收束、22 柱 ElevenLabs v4 波形语音与独立代码卡。">
+  <meta name="twitter:description" content="一行 npx 零克隆挂载：send_bubble + exec.concludeTurn() 零重试收束、原生短气泡、独立代码卡与可选语音胶囊。">
   <meta name="twitter:image" content="https://nb-corp.github.io/nb-speak-dsh/og-banner.png">
 
   <link rel="stylesheet" href="../assets/style.css">
@@ -35,7 +35,7 @@
         "@type": "SoftwareSourceCode",
         "name": "@nb-corp/nb-speak-dsh",
         "inLanguage": "zh-CN",
-        "description": "独立零依赖的 DeepSeek Harness (DSH) Cordis 插件与 WebUI 扩展：原生注册 send_bubble (exec.concludeTurn()) 与 send_artifact，在 conversation.chat.turnTail 渲染短气泡、22 柱 ElevenLabs v4 语音胶囊与可复制代码卡片。",
+        "description": "独立零依赖的 DeepSeek Harness (DSH) Cordis 插件与 WebUI 扩展：原生注册 send_bubble (exec.concludeTurn()) 与 send_artifact，在 conversation.chat.turnTail 渲染短气泡、可复制代码卡片与可选 22 柱波形语音胶囊（默认关闭）。",
         "codeRepository": "https://github.com/NB-Corp/nb-speak-dsh",
         "url": "https://nb-corp.github.io/nb-speak-dsh/zh/",
         "programmingLanguage": ["TypeScript", "JavaScript"],
@@ -118,7 +118,7 @@
               <span>@nb-corp/nb-speak-dsh · 零外部运行时依赖</span>
             </span>
             <h1 class="hero-title">给 DSH 换上真人短气泡</h1>
-            <p class="hero-sub">原生注册 <code class="mono">send_bubble</code> + <code class="mono">send_artifact</code> 并挂载至 <code class="mono">turnTail</code>：短句圆角气泡、22 柱 ElevenLabs <code class="mono">eleven_v4</code> 语音胶囊与可复制代码卡。</p>
+            <p class="hero-sub">原生注册 <code class="mono">send_bubble</code> + <code class="mono">send_artifact</code> 并挂载至 <code class="mono">turnTail</code>：短句圆角气泡、可复制代码卡与可选语音胶囊（默认关闭）。</p>
           </div>
 
           <div class="scenario-bar" id="scenario-tabs" role="tablist" aria-label="DSH 实机对比场景"></div>
@@ -222,8 +222,8 @@
               <div class="field-group">
                 <label class="field-label" for="cli-tts">语音胶囊引擎</label>
                 <select class="soft-select" id="cli-tts">
-                  <option value="elevenlabs">ElevenLabs eleven_v4 真声</option>
-                  <option value="webspeech">免密钥 Web Speech 回退</option>
+                  <option value="off">默认关闭（纯文字短气泡 + 代码卡）</option>
+                  <option value="optin">开启语音胶囊（OpenAI 兼容 / 自定义 TTS / Web Speech）</option>
                 </select>
               </div>
             </div>
@@ -301,7 +301,7 @@
 
     <footer class="site-foot">
       <div>
-        <strong>@nb-corp/nb-speak-dsh</strong> · MIT License © 2026 NB-Corp。演示语音由 ElevenLabs (<code class="mono">eleven_v4</code>) 官方预置平台音色合成（<a href="../assets/audio/NOTICE.txt" style="text-decoration:underline;">AI 合成音频说明</a>）。
+        <strong>@nb-corp/nb-speak-dsh</strong> · MIT License © 2026 NB-Corp。演示语音为 AI 合成演示音频（<a href="../assets/audio/NOTICE.txt" style="text-decoration:underline;">AI 合成演示音频说明</a>）。
       </div>
       <div class="foot-links">
         <a href="https://github.com/NB-Corp/nb-speak-dsh">GitHub</a>

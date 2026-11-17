@@ -569,16 +569,44 @@ function assertStrictDshSchemaSubset(node: unknown, trail = 'root'): void {
   }
 }
 
-test('Native DSH send_bubble + send_artifact obey strict DSH JSON Schema subset and register in native mode', async () => {
-  const bubbleDef = createSendBubbleToolDefinition() as Record<string, any>;
+test('Native DSH send_bubble + send_artifact obey strict DSH JSON Schema subset, disable voice_note by default, and allow opt-in enableVoiceNotes', async () => {
+  const defaultBubbleDef = createSendBubbleToolDefinition() as Record<string, any>;
+  const optInBubbleDef = createSendBubbleToolDefinition({ enableVoiceNotes: true }) as Record<string, any>;
   const artifactDef = createSendArtifactToolDefinition() as Record<string, any>;
-  assertStrictDshSchemaSubset(bubbleDef.parameters, 'send_bubble.parameters');
-  assertStrictDshSchemaSubset(bubbleDef.output.schema, 'send_bubble.output');
+  assertStrictDshSchemaSubset(defaultBubbleDef.parameters, 'send_bubble.default.parameters');
+  assertStrictDshSchemaSubset(optInBubbleDef.parameters, 'send_bubble.optin.parameters');
+  assertStrictDshSchemaSubset(optInBubbleDef.output.schema, 'send_bubble.output');
   assertStrictDshSchemaSubset(artifactDef.parameters, 'send_artifact.parameters');
   assertStrictDshSchemaSubset(artifactDef.output.schema, 'send_artifact.output');
+  assert.equal(defaultBubbleDef.parameters.properties.voice_note, undefined);
+  assert.ok(optInBubbleDef.parameters.properties.voice_note);
+
+  let defaultTtsCalled = 0;
+  const strictDefaultBubbleDef = createSendBubbleToolDefinition({
+    enableVoiceNotes: false,
+    synthesizeVoiceNote: async () => {
+      defaultTtsCalled += 1;
+      return { audioSrc: 'data:audio/mpeg;base64,AAA', durationSeconds: 3 };
+    },
+  }) as Record<string, any>;
+  const strippedOut = await strictDefaultBubbleDef.execute({
+    bubbles: ['纯文字短气泡测试'],
+    voice_note: { text: '这条应该被静默忽略', emotion: 'warm' },
+  });
+  assert.equal(strippedOut.hasVoiceNote, false);
+  assert.equal(strippedOut.audioSrc, undefined);
+  assert.equal(defaultTtsCalled, 0);
+  const strippedMeta = strictDefaultBubbleDef.output.presentationMeta(
+    {
+      bubbles: ['纯文字短气泡测试'],
+      voice_note: { text: '这条应该被静默忽略', emotion: 'warm' },
+    },
+    strippedOut,
+  );
+  assert.equal(strippedMeta.voiceNote, undefined);
 
   let concludeCalls = 0;
-  const bubbleOut = await bubbleDef.execute(
+  const bubbleOut = await optInBubbleDef.execute(
     {
       bubbles: ['气泡 1：全仓库零第三方依赖。', '桥接命令放下面卡片了'],
       voice_note: { text: '直接用 Node 二十二以上就能跑起来', emotion: 'warm' },
@@ -594,7 +622,7 @@ test('Native DSH send_bubble + send_artifact obey strict DSH JSON Schema subset 
   assert.equal(bubbleOut.hasVoiceNote, true);
   assert.equal(concludeCalls, 1);
 
-  await bubbleDef.execute(
+  await optInBubbleDef.execute(
     { bubbles: ['先扫一下目录'], end_turn: false },
     {
       concludeTurn() {
@@ -603,7 +631,7 @@ test('Native DSH send_bubble + send_artifact obey strict DSH JSON Schema subset 
     },
   );
   assert.equal(concludeCalls, 1);
-  const bubbleMeta = bubbleDef.output.presentationMeta(
+  const bubbleMeta = optInBubbleDef.output.presentationMeta(
     {
       bubbles: ['气泡 1：全仓库零第三方依赖。', '桥接命令放下面卡片了'],
       voice_note: { text: '直接用 Node 二十二以上就能跑起来', emotion: 'warm' },
@@ -667,7 +695,33 @@ test('Native DSH send_bubble + send_artifact obey strict DSH JSON Schema subset 
   assert.equal(providedService?.bridgeBaseUrl, undefined);
   assert.ok(promptTextFn?.().includes('send_bubble'));
   assert.ok(promptTextFn?.().includes('sharp, candid tech lead'));
+  assert.ok(!promptTextFn?.().includes('voice_note'));
   await cleanupNative?.();
+
+  let optInPromptFn: (() => string) | undefined;
+  let cleanupOptIn: (() => Promise<void> | void) | undefined;
+  await applyPlugin(
+    {
+      tools: { register: () => () => {} },
+      systemPrompt: {
+        section(entry) {
+          optInPromptFn = typeof entry.text === 'function' ? () => entry.text({}) : () => entry.text;
+          return () => {};
+        },
+      },
+      provide() {},
+      effect(factory) {
+        cleanupOptIn = factory();
+      },
+    },
+    {
+      runtimeMode: 'native',
+      preset: 'sharp_lead',
+    },
+    { env: { NB_SPEAK_VOICE_NOTES: 'true' } },
+  );
+  assert.ok(optInPromptFn?.().includes('voice_note'));
+  await cleanupOptIn?.();
 });
 
 test('WebUI client turn reducer + compiled dist/client.js ModuleLoader bundle render bubbles, voice note, and artifact card', () => {
@@ -825,14 +879,52 @@ test('WebUI client turn reducer + compiled dist/client.js ModuleLoader bundle re
       },
     }),
   );
-  assert.ok(renderedWithAudio.includes('elevenlabs-audio'));
+  assert.ok(renderedWithAudio.includes('audio-clip'));
   assert.ok(renderedWithAudio.includes('data-nb-speak-audio'));
 });
 
-test('Optional ElevenLabs TTS synthesizer produces DataURI audio when configured and falls back cleanly without keys', async () => {
+test('Provider-agnostic TTS synthesizer supports OpenAI-compatible /v1/audio/speech, ElevenLabs, and Web Speech fallback', async () => {
   const noKeySynth = createVoiceNoteSynthesizer({ env: {} });
   const emptyRes = await noKeySynth({ text: '刚下班，先买瓶热乌龙茶缓一口气。', emotion: 'warm' });
   assert.equal(emptyRes, undefined);
+
+  const webSpeechSynth = createVoiceNoteSynthesizer({
+    env: { NB_SPEAK_TTS_PROVIDER: 'webspeech', ELEVENLABS_API_KEY: 'unused' },
+  });
+  assert.equal(await webSpeechSynth({ text: '纯浏览器朗读测试', emotion: 'calm' }), undefined);
+
+  let oaiUrl = '';
+  let oaiAuth = '';
+  let oaiBody: Record<string, unknown> = {};
+  const fakeMp3 = Buffer.alloc(4096, 0x55);
+  const oaiSynth = createVoiceNoteSynthesizer({
+    env: {
+      NB_SPEAK_TTS_BASE_URL: 'https://tts.example.test/v1',
+      NB_SPEAK_TTS_API_KEY: 'sk-tts-test',
+      NB_SPEAK_TTS_MODEL: 'qwen3-tts-flash',
+      NB_SPEAK_TTS_VOICE: 'Cherry',
+    },
+    fetchImpl: async (url, init) => {
+      oaiUrl = String(url);
+      oaiAuth = String((init?.headers as Record<string, string>)?.authorization ?? '');
+      oaiBody = JSON.parse(String(init?.body || '{}')) as Record<string, unknown>;
+      return new Response(fakeMp3, { status: 200, headers: { 'content-type': 'audio/mpeg' } });
+    },
+  });
+  const oaiBubbleDef = createSendBubbleToolDefinition({
+    enableVoiceNotes: true,
+    synthesizeVoiceNote: oaiSynth,
+  }) as Record<string, any>;
+  const oaiOut = await oaiBubbleDef.execute({
+    bubbles: ['周五脑子宕机太正常了', '拿盒关东煮萝卜配热茶先垫垫'],
+    voice_note: { text: '先吃口热的再回家。', emotion: 'warm' },
+  });
+  assert.equal(oaiUrl, 'https://tts.example.test/v1/audio/speech');
+  assert.equal(oaiAuth, 'Bearer sk-tts-test');
+  assert.equal(oaiBody.model, 'qwen3-tts-flash');
+  assert.equal(oaiBody.voice, 'Cherry');
+  assert.equal(oaiBody.response_format, 'mp3');
+  assert.ok(String(oaiOut.audioSrc).startsWith('data:audio/mpeg;base64,'));
 
   assert.equal(resolveElevenLabsVoiceId('auto', 'warm'), 'cgSgspJ2msm6clMCkdW9');
   assert.equal(resolveElevenLabsVoiceId('auto', 'calm'), 'tOuLUAIdXShmWH7PEUrU');
@@ -842,7 +934,6 @@ test('Optional ElevenLabs TTS synthesizer produces DataURI audio when configured
 
   let capturedUrl = '';
   let capturedBody: Record<string, unknown> = {};
-  const fakeMp3 = Buffer.alloc(4096, 0x55);
   const directSynth = createVoiceNoteSynthesizer({
     env: { ELEVENLABS_API_KEY: 'YOUR_API_KEY' },
     fetchImpl: async (url, init) => {
@@ -852,7 +943,10 @@ test('Optional ElevenLabs TTS synthesizer produces DataURI audio when configured
     },
   });
 
-  const bubbleDef = createSendBubbleToolDefinition({ synthesizeVoiceNote: directSynth }) as Record<string, any>;
+  const bubbleDef = createSendBubbleToolDefinition({
+    enableVoiceNotes: true,
+    synthesizeVoiceNote: directSynth,
+  }) as Record<string, any>;
   const out = await bubbleDef.execute({
     bubbles: ['周五脑子宕机太正常了', '拿盒关东煮萝卜配热茶先垫垫'],
     voice_note: { text: '别盯着热量表算啦。挑个顺眼的结账回家瘫着去。', emotion: 'warm' },

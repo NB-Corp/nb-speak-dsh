@@ -10,6 +10,7 @@
         calm_grounding: 0.2
         concise_cadence: 0.3
         registerGlobalTools: true
+        enableVoiceNotes: false
         cloudBaseUrl: https://api.deepseek.com/v1
         defaultCloudModel: deepseek-chat
         voiceModelBaseUrl: http://127.0.0.1:18088/v1

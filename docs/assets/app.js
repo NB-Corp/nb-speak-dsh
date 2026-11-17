@@ -351,9 +351,14 @@ function initCliBuilder() {
 
     const lines = [];
     const presetArg = action === 'apply' && preset !== 'neutral_peer' ? ` --preset ${preset}` : '';
-    lines.push(`npx --yes github:NB-Corp/nb-speak-dsh --${action} --profile ${profile}${presetArg}`);
+    const voiceArg = action === 'apply' && tts === 'optin' ? ' --voice-notes' : '';
+    lines.push(`npx --yes github:NB-Corp/nb-speak-dsh --${action} --profile ${profile}${presetArg}${voiceArg}`);
     if (action === 'apply') {
-      lines.push(tts === 'elevenlabs' ? `ELEVENLABS_API_KEY="xi-..." dsh ${profile}` : `dsh ${profile}`);
+      lines.push(
+        tts === 'optin'
+          ? `NB_SPEAK_VOICE_NOTES=true NB_SPEAK_TTS_BASE_URL="http://127.0.0.1:8000/v1" dsh ${profile}`
+          : `dsh ${profile}`,
+      );
     }
     preEl.textContent = lines.join('\n');
 

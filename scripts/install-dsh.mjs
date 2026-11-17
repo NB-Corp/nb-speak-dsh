@@ -64,6 +64,7 @@ export function formatHelpText() {
     '  --dsh-home <dir>         Override DSH_HOME (defaults to $DSH_HOME or ~/.dsh)',
     '  --preset <id>            Persona preset: neutral_peer (default), sharp_lead, warm_companion, calm_sre',
     '  --runtime-mode <mode>    native (default), skill, or voice-model',
+    '  --voice-notes            Enable optional voice_note capsule (default: disabled)',
     '  --link                   Link directly to current checkout instead of copying to <DSH_HOME>/plugins',
     '  -v, --version            Print package version',
     '  -h, --help               Show this help message',
@@ -82,6 +83,7 @@ export function parseCliArgs(argv) {
   let apiKeyRef = '';
   let wireProvider = false;
   let linkSource = false;
+  let enableVoiceNotes = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -91,6 +93,7 @@ export function parseCliArgs(argv) {
     else if (arg === '--apply') mode = 'apply';
     else if (arg === '--uninstall') mode = 'uninstall';
     else if (arg === '--link') linkSource = true;
+    else if (arg === '--voice-notes') enableVoiceNotes = true;
     else if (arg === '--dsh-home' && argv[i + 1]) dshHome = argv[++i];
     else if (arg === '--profile' && argv[i + 1]) profile = argv[++i];
     else if (arg === '--bridge-port' && argv[i + 1]) bridgePort = Number(argv[++i]);
@@ -121,6 +124,7 @@ export function parseCliArgs(argv) {
     apiKeyRef: apiKeyRef.trim(),
     wireProvider,
     linkSource,
+    enableVoiceNotes,
     pluginRoot: PLUGIN_ROOT,
   };
 }
@@ -204,6 +208,7 @@ export function runInstaller(options) {
     apiKeyRef = '',
     wireProvider = false,
     linkSource = false,
+    enableVoiceNotes = false,
     pluginRoot = PLUGIN_ROOT,
   } = options;
 
@@ -299,6 +304,7 @@ export function runInstaller(options) {
     cloudModel ||
     apiKeyRef ||
     wireProvider ||
+    enableVoiceNotes ||
     bridgePort !== 18091 ||
     runtimeMode !== 'native' ||
     preset !== 'neutral_peer'
@@ -312,6 +318,7 @@ export function runInstaller(options) {
       '  config:',
       `    runtimeMode: ${JSON.stringify(runtimeMode)}`,
       `    preset: ${JSON.stringify(preset)}`,
+      `    enableVoiceNotes: ${enableVoiceNotes ? 'true' : 'false'}`,
       `    bridgeEnabled: ${bridgeNeeded ? 'true' : 'false'}`,
       `    bridgePort: ${bridgePort}`,
     ];

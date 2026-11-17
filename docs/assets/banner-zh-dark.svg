@@ -8,9 +8,9 @@
   <rect x="358" y="51" width="132" height="26" rx="13" fill="#24382c"/>
   <text x="424" y="68" text-anchor="middle" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', sans-serif" font-size="12" font-weight="700" fill="#8fd4ab">DSH 原生插件</text>
 
-  <text x="48" y="130" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="25" font-weight="700" fill="#8fd4ab">为 DeepSeek Harness 注入真气泡与贴麦语音</text>
+  <text x="48" y="130" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="25" font-weight="700" fill="#8fd4ab">为 DeepSeek Harness 注入真气泡与代码卡</text>
   <text x="48" y="168" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="15.5" fill="#a9b2ac">原生 send_bubble + send_artifact 双工具 · exec.concludeTurn() 零重试结束回合</text>
-  <text x="48" y="194" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="15.5" fill="#a9b2ac">22 柱 ElevenLabs v4 / Web Speech 波形语音胶囊 · 可展开一键复制代码与 SQL 卡片</text>
+  <text x="48" y="194" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="15.5" fill="#a9b2ac">可展开一键复制代码与 SQL 卡片 · 可选 22 柱波形语音胶囊（默认关闭）</text>
   <text x="48" y="228" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" fill="#8fd4ab">npx --yes github:NB-Corp/nb-speak-dsh --apply --profile web</text>
 
   <rect x="748" y="28" width="414" height="212" rx="20" fill="#232825" stroke="#323a35" stroke-width="1.2"/>
@@ -30,7 +30,7 @@
   <rect x="828" y="136" width="2.8" height="14" rx="1.4" fill="#8fd4ab"/>
   <rect x="834" y="139" width="2.8" height="8" rx="1.4" fill="#466b56"/>
   <rect x="840" y="135" width="2.8" height="16" rx="1.4" fill="#466b56"/>
-  <text x="854" y="148" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#9de0b8">0:08 · eleven_v4</text>
+  <text x="854" y="148" font-family="'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei UI', sans-serif" font-size="11.5" font-weight="700" fill="#9de0b8">0:08 · 沉稳补充</text>
 
   <rect x="768" y="168" width="374" height="56" rx="12" fill="#1e2320" stroke="#333c36" stroke-width="1"/>
   <text x="784" y="189" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11.5" font-weight="700" fill="#edf1ee">orders-pagination-fix.sql</text>
